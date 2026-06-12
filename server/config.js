@@ -10,6 +10,7 @@ export const config = {
     appId: env.FEISHU_APP_ID || '',
     appSecret: env.FEISHU_APP_SECRET || '',
     baseAppToken: env.BASE_APP_TOKEN || env.FEISHU_BASE_APP_TOKEN || '',
+    wikiNodeToken: env.WIKI_NODE_TOKEN || env.FEISHU_WIKI_NODE_TOKEN || '',
     tables: {
       vehicle: env.VEHICLE_TABLE_ID || env.FEISHU_VEHICLE_TABLE_ID || '',
       specs: env.SPECS_TABLE_ID || '',
@@ -25,7 +26,9 @@ export function requireFeishuConfig() {
   const missing = [];
   if (!config.feishu.appId) missing.push('FEISHU_APP_ID');
   if (!config.feishu.appSecret) missing.push('FEISHU_APP_SECRET');
-  if (!config.feishu.baseAppToken) missing.push('BASE_APP_TOKEN');
+  if (!config.feishu.baseAppToken && !config.feishu.wikiNodeToken) {
+    missing.push('BASE_APP_TOKEN or WIKI_NODE_TOKEN');
+  }
   if (!config.feishu.tables.vehicle) missing.push('VEHICLE_TABLE_ID');
   if (!config.feishu.tables.specs) missing.push('SPECS_TABLE_ID');
   if (!config.feishu.tables.benchmark) missing.push('BENCHMARK_TABLE_ID');

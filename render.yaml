@@ -20,6 +20,8 @@ services:
         sync: false
       - key: BASE_APP_TOKEN
         sync: false
+      - key: WIKI_NODE_TOKEN
+        sync: false
       - key: VEHICLE_TABLE_ID
         sync: false
       - key: SPECS_TABLE_ID

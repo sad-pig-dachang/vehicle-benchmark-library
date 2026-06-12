@@ -5,6 +5,7 @@ const TOKEN_SAFETY_WINDOW_MS = 60 * 1000;
 
 let cachedTenantToken = null;
 let cachedTenantTokenExpiresAt = 0;
+let cachedBaseAppToken = config.feishu.baseAppToken || '';
 
 function assertOkResponse(payload, action) {
   if (payload?.code !== 0) {
@@ -63,8 +64,33 @@ async function feishuFetch(path, options = {}, action = 'Feishu request') {
   return parseResponse(response, action);
 }
 
-function recordsPath(tableId, recordId = '') {
-  const appToken = encodeURIComponent(config.feishu.baseAppToken);
+async function getBaseAppToken() {
+  if (cachedBaseAppToken) {
+    return cachedBaseAppToken;
+  }
+
+  const search = new URLSearchParams({ token: config.feishu.wikiNodeToken });
+  const payload = await feishuFetch(
+    `/wiki/v2/spaces/get_node?${search.toString()}`,
+    { method: 'GET' },
+    'Resolve wiki node token',
+  );
+
+  const node = payload.data?.node;
+  if (!node?.obj_token) {
+    throw new Error('Resolve wiki node token failed: response does not include obj_token');
+  }
+
+  if (node.obj_type && node.obj_type !== 'bitable') {
+    throw new Error(`Resolve wiki node token failed: expected bitable node, received ${node.obj_type}`);
+  }
+
+  cachedBaseAppToken = node.obj_token;
+  return cachedBaseAppToken;
+}
+
+async function recordsPath(tableId, recordId = '') {
+  const appToken = encodeURIComponent(await getBaseAppToken());
   const encodedTableId = encodeURIComponent(tableId);
   const suffix = recordId ? `/${encodeURIComponent(recordId)}` : '';
   return `/bitable/v1/apps/${appToken}/tables/${encodedTableId}/records${suffix}`;
@@ -79,7 +105,7 @@ export async function listRecords(tableId) {
     if (pageToken) search.set('page_token', pageToken);
 
     const payload = await feishuFetch(
-      `${recordsPath(tableId)}?${search.toString()}`,
+      `${await recordsPath(tableId)}?${search.toString()}`,
       { method: 'GET' },
       `List records from ${tableId}`,
     );
@@ -92,13 +118,13 @@ export async function listRecords(tableId) {
 }
 
 export async function getRecord(tableId, recordId) {
-  const payload = await feishuFetch(recordsPath(tableId, recordId), { method: 'GET' }, `Get record ${recordId}`);
+  const payload = await feishuFetch(await recordsPath(tableId, recordId), { method: 'GET' }, `Get record ${recordId}`);
   return payload.data?.record;
 }
 
 export async function createRecord(tableId, fields) {
   const payload = await feishuFetch(
-    recordsPath(tableId),
+    await recordsPath(tableId),
     {
       method: 'POST',
       body: JSON.stringify({ fields }),
@@ -110,7 +136,7 @@ export async function createRecord(tableId, fields) {
 
 export async function updateRecord(tableId, recordId, fields) {
   const payload = await feishuFetch(
-    recordsPath(tableId, recordId),
+    await recordsPath(tableId, recordId),
     {
       method: 'PUT',
       body: JSON.stringify({ fields }),
@@ -121,5 +147,5 @@ export async function updateRecord(tableId, recordId, fields) {
 }
 
 export async function deleteRecord(tableId, recordId) {
-  await feishuFetch(recordsPath(tableId, recordId), { method: 'DELETE' }, `Delete record ${recordId}`);
+  await feishuFetch(await recordsPath(tableId, recordId), { method: 'DELETE' }, `Delete record ${recordId}`);
 }

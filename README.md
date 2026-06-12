@@ -145,6 +145,7 @@ ALLOW_WRITES=false
 FEISHU_APP_ID=你的飞书应用 App ID
 FEISHU_APP_SECRET=你的飞书应用 App Secret
 BASE_APP_TOKEN=你的多维表格 App Token
+WIKI_NODE_TOKEN=如果你的链接是 /wiki/ 形式，填 wiki 后面的 token，可替代 BASE_APP_TOKEN
 VEHICLE_TABLE_ID=车型主表 ID
 SPECS_TABLE_ID=参数表 ID
 BENCHMARK_TABLE_ID=对标点表 ID
@@ -214,6 +215,7 @@ ALLOW_WRITES=false
 FEISHU_APP_ID=
 FEISHU_APP_SECRET=
 BASE_APP_TOKEN=
+WIKI_NODE_TOKEN=
 VEHICLE_TABLE_ID=
 SPECS_TABLE_ID=
 BENCHMARK_TABLE_ID=
@@ -222,7 +224,7 @@ DISCUSSION_TABLE_ID=
 VERSION_TABLE_ID=
 ```
 
-`BASE_APP_TOKEN` 是多维表格 app token；各 `*_TABLE_ID` 是对应数据表 ID。
+`BASE_APP_TOKEN` 是多维表格 app token；如果你的飞书链接是 `/wiki/xxx?table=...` 这种形式，可以不填 `BASE_APP_TOKEN`，改填 `WIKI_NODE_TOKEN=xxx`。后端会通过飞书 Wiki 节点信息接口解析出真正的多维表格 app token。各 `*_TABLE_ID` 是对应数据表 ID。
 
 ### 飞书多维表格权限
 
