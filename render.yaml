@@ -18,8 +18,6 @@ services:
         sync: false
       - key: FEISHU_APP_SECRET
         sync: false
-      - key: BASE_APP_TOKEN
-        sync: false
       - key: WIKI_NODE_TOKEN
         sync: false
       - key: VEHICLE_TABLE_ID
