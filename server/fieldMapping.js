@@ -69,16 +69,112 @@ const jsonFromField = (value, fallback) => {
 const jsonToField = (value) => JSON.stringify(value || {}, null, 2);
 const arrayToField = (items = []) => items;
 
+export const fieldAliases = {
+  vehicleId: ['vehicleId', '车型ID', '车型编号', '车辆ID'],
+  brand: ['brand', '品牌'],
+  model: ['model', '车型', '车型名称'],
+  year: ['year', '年款'],
+  market: ['market', '市场', '国内/海外'],
+  countryRegion: ['countryRegion', '国家/地区', '国家地区'],
+  level: ['level', '车型级别', '级别'],
+  energy: ['energy', '能源形式', '能源'],
+  priceMin: ['priceMin', '最低价格', '价格下限', '价格区间最低'],
+  priceMax: ['priceMax', '最高价格', '价格上限', '价格区间最高'],
+  coverImageUrl: ['coverImageUrl', '封面图链接', '封面图URL'],
+  coverImageTitle: ['coverImageTitle', '封面图标题'],
+  coverImageAlt: ['coverImageAlt', '封面图说明'],
+  coverImageSource: ['coverImageSource', '封面图来源'],
+  productPositioning: ['productPositioning', '产品定位'],
+  targetUsers: ['targetUsers', '目标用户'],
+  summary: ['summary', '车型一句话总结', '一句话总结', '总结'],
+  keyTags: ['keyTags', '关键标签'],
+  scenarioTags: ['scenarioTags', '使用场景标签', '场景标签'],
+  hmiTags: ['hmiTags', 'HMI标签', 'HMI 标签'],
+  stylingTags: ['stylingTags', '内外饰标签', '造型标签'],
+  status: ['status', '数据状态'],
+  completeness: ['completeness', '数据完整度'],
+  updatedAt: ['updatedAt', '更新时间'],
+  isKeyModel: ['isKeyModel', '重点车型'],
+  coreHighlights: ['coreHighlights', '核心特点'],
+  designFocus: ['designFocus', '设计看点'],
+  benchmarkSuitability: ['benchmarkSuitability', '适合对标类型'],
+  specJson: ['specJson', '参数JSON', '基础参数JSON', '配置JSON'],
+  pointId: ['pointId', '对标点ID'],
+  category: ['category', '类别', '对标类型'],
+  title: ['title', '标题'],
+  description: ['description', '描述'],
+  sceneDescription: ['sceneDescription', '场景描述'],
+  userValue: ['userValue', '用户价值'],
+  highlight: ['highlight', '体验亮点', '亮点'],
+  issue: ['issue', '问题'],
+  referenceValue: ['referenceValue', '可借鉴点', '引用价值'],
+  mediaJson: ['mediaJson', '媒体JSON', '图片JSON', '截图JSON'],
+  interfaceLocation: ['interfaceLocation', '界面位置'],
+  interactionMode: ['interactionMode', '交互方式'],
+  visualStyle: ['visualStyle', '视觉风格'],
+  informationArchitecture: ['informationArchitecture', '信息架构'],
+  motion: ['motion', '动效'],
+  stylingFeature: ['stylingFeature', '造型特征'],
+  brandIdentity: ['brandIdentity', '品牌识别点'],
+  proportion: ['proportion', '比例姿态'],
+  detailDesign: ['detailDesign', '细节设计'],
+  materialColor: ['materialColor', '材质/色彩', '材质 / 色彩'],
+  linkId: ['linkId', '链接ID'],
+  platform: ['platform', '平台'],
+  url: ['url', '链接', 'URL'],
+  heat: ['heat', '热度'],
+  sentiment: ['sentiment', '情绪倾向'],
+  logId: ['logId', '迭代记录ID', '记录ID'],
+  yearModel: ['yearModel', '年款/改款时间', '年款'],
+  changeTime: ['changeTime', '改款时间', '变化时间'],
+  changeTypes: ['changeTypes', '变化类型'],
+  designImpact: ['designImpact', '对设计对标的影响', '设计对标影响'],
+};
+
+export const chineseFieldNames = Object.fromEntries(
+  Object.entries(fieldAliases).map(([key, aliases]) => [key, aliases[1] || key]),
+);
+
+export function fieldValue(fields, key) {
+  const aliases = fieldAliases[key] || [key];
+  for (const name of aliases) {
+    if (Object.prototype.hasOwnProperty.call(fields, name)) {
+      return fields[name];
+    }
+  }
+  return undefined;
+}
+
+const benchmarkCategoryFromField = (value) => {
+  const raw = textFromField(value, 'experience').trim().toLowerCase();
+  const map = {
+    体验: 'experience',
+    体验场景: 'experience',
+    experience: 'experience',
+    hmi: 'hmi',
+    界面: 'hmi',
+    外饰: 'exterior',
+    exterior: 'exterior',
+    内饰: 'interior',
+    interior: 'interior',
+  };
+
+  return map[raw] || 'experience';
+};
+
 export function vehicleFieldsToEntity(record, grouped = {}) {
   const fields = record.fields || {};
-  const vehicleId = textFromField(fields.vehicleId, record.record_id);
+  const vehicleId = textFromField(fieldValue(fields, 'vehicleId'), record.record_id);
   const coverImage = {
     id: `${vehicleId}-cover`,
     type: 'image',
-    url: textFromField(fields.coverImageUrl, fallbackImage),
-    title: textFromField(fields.coverImageTitle, `${textFromField(fields.brand)} ${textFromField(fields.model)} 封面图`),
-    alt: textFromField(fields.coverImageAlt, textFromField(fields.coverImageTitle, '车型封面图')),
-    source: textFromField(fields.coverImageSource, 'Feishu'),
+    url: textFromField(fieldValue(fields, 'coverImageUrl'), fallbackImage),
+    title: textFromField(
+      fieldValue(fields, 'coverImageTitle'),
+      `${textFromField(fieldValue(fields, 'brand'))} ${textFromField(fieldValue(fields, 'model'))} 封面图`,
+    ),
+    alt: textFromField(fieldValue(fields, 'coverImageAlt'), textFromField(fieldValue(fields, 'coverImageTitle'), '车型封面图')),
+    source: textFromField(fieldValue(fields, 'coverImageSource'), 'Feishu'),
   };
 
   const benchmarkPoints = grouped.benchmarkPoints || [];
@@ -90,31 +186,31 @@ export function vehicleFieldsToEntity(record, grouped = {}) {
   return {
     id: vehicleId,
     recordId: record.record_id,
-    brand: textFromField(fields.brand),
-    model: textFromField(fields.model),
-    year: textFromField(fields.year),
-    market: textFromField(fields.market, '国内'),
-    countryRegion: textFromField(fields.countryRegion),
-    level: textFromField(fields.level, 'SUV'),
-    energy: textFromField(fields.energy, '纯电'),
-    priceMin: numberFromField(fields.priceMin),
-    priceMax: numberFromField(fields.priceMax),
+    brand: textFromField(fieldValue(fields, 'brand')),
+    model: textFromField(fieldValue(fields, 'model')),
+    year: textFromField(fieldValue(fields, 'year')),
+    market: textFromField(fieldValue(fields, 'market'), '国内'),
+    countryRegion: textFromField(fieldValue(fields, 'countryRegion')),
+    level: textFromField(fieldValue(fields, 'level'), 'SUV'),
+    energy: textFromField(fieldValue(fields, 'energy'), '纯电'),
+    priceMin: numberFromField(fieldValue(fields, 'priceMin')),
+    priceMax: numberFromField(fieldValue(fields, 'priceMax')),
     coverImage,
-    productPositioning: textFromField(fields.productPositioning),
-    targetUsers: textFromField(fields.targetUsers),
-    summary: textFromField(fields.summary),
-    keyTags: arrayFromField(fields.keyTags),
-    scenarioTags: arrayFromField(fields.scenarioTags),
-    hmiTags: arrayFromField(fields.hmiTags),
-    stylingTags: arrayFromField(fields.stylingTags),
-    status: textFromField(fields.status, '待补充'),
-    completeness: numberFromField(fields.completeness, 0),
-    updatedAt: dateFromField(fields.updatedAt),
-    isKeyModel: boolFromField(fields.isKeyModel),
+    productPositioning: textFromField(fieldValue(fields, 'productPositioning')),
+    targetUsers: textFromField(fieldValue(fields, 'targetUsers')),
+    summary: textFromField(fieldValue(fields, 'summary')),
+    keyTags: arrayFromField(fieldValue(fields, 'keyTags')),
+    scenarioTags: arrayFromField(fieldValue(fields, 'scenarioTags')),
+    hmiTags: arrayFromField(fieldValue(fields, 'hmiTags')),
+    stylingTags: arrayFromField(fieldValue(fields, 'stylingTags')),
+    status: textFromField(fieldValue(fields, 'status'), '待补充'),
+    completeness: numberFromField(fieldValue(fields, 'completeness'), 0),
+    updatedAt: dateFromField(fieldValue(fields, 'updatedAt')),
+    isKeyModel: boolFromField(fieldValue(fields, 'isKeyModel')),
     spec: grouped.spec || {},
-    coreHighlights: arrayFromField(fields.coreHighlights),
-    designFocus: arrayFromField(fields.designFocus),
-    benchmarkSuitability: arrayFromField(fields.benchmarkSuitability),
+    coreHighlights: arrayFromField(fieldValue(fields, 'coreHighlights')),
+    designFocus: arrayFromField(fieldValue(fields, 'designFocus')),
+    benchmarkSuitability: arrayFromField(fieldValue(fields, 'benchmarkSuitability')),
     experiencePoints,
     hmiPoints,
     exteriorPoints,
@@ -160,9 +256,9 @@ export function vehicleToFields(vehicle) {
 export function specRecordToEntity(record) {
   const fields = record.fields || {};
   return {
-    vehicleId: textFromField(fields.vehicleId),
+    vehicleId: textFromField(fieldValue(fields, 'vehicleId')),
     recordId: record.record_id,
-    spec: jsonFromField(fields.specJson, {}),
+    spec: jsonFromField(fieldValue(fields, 'specJson'), {}),
   };
 }
 
@@ -177,27 +273,27 @@ export function benchmarkRecordToEntity(record) {
   const fields = record.fields || {};
   return {
     recordId: record.record_id,
-    id: textFromField(fields.pointId, record.record_id),
-    vehicleId: textFromField(fields.vehicleId),
-    category: textFromField(fields.category, 'experience'),
-    title: textFromField(fields.title),
-    description: textFromField(fields.description),
-    sceneDescription: textFromField(fields.sceneDescription),
-    userValue: textFromField(fields.userValue),
-    highlight: textFromField(fields.highlight),
-    issue: textFromField(fields.issue),
-    referenceValue: textFromField(fields.referenceValue),
-    media: jsonFromField(fields.mediaJson, undefined),
-    interfaceLocation: textFromField(fields.interfaceLocation),
-    interactionMode: textFromField(fields.interactionMode),
-    visualStyle: textFromField(fields.visualStyle),
-    informationArchitecture: textFromField(fields.informationArchitecture),
-    motion: textFromField(fields.motion),
-    stylingFeature: textFromField(fields.stylingFeature),
-    brandIdentity: textFromField(fields.brandIdentity),
-    proportion: textFromField(fields.proportion),
-    detailDesign: textFromField(fields.detailDesign),
-    materialColor: textFromField(fields.materialColor),
+    id: textFromField(fieldValue(fields, 'pointId'), record.record_id),
+    vehicleId: textFromField(fieldValue(fields, 'vehicleId')),
+    category: benchmarkCategoryFromField(fieldValue(fields, 'category')),
+    title: textFromField(fieldValue(fields, 'title')),
+    description: textFromField(fieldValue(fields, 'description')),
+    sceneDescription: textFromField(fieldValue(fields, 'sceneDescription')),
+    userValue: textFromField(fieldValue(fields, 'userValue')),
+    highlight: textFromField(fieldValue(fields, 'highlight')),
+    issue: textFromField(fieldValue(fields, 'issue')),
+    referenceValue: textFromField(fieldValue(fields, 'referenceValue')),
+    media: jsonFromField(fieldValue(fields, 'mediaJson'), undefined),
+    interfaceLocation: textFromField(fieldValue(fields, 'interfaceLocation')),
+    interactionMode: textFromField(fieldValue(fields, 'interactionMode')),
+    visualStyle: textFromField(fieldValue(fields, 'visualStyle')),
+    informationArchitecture: textFromField(fieldValue(fields, 'informationArchitecture')),
+    motion: textFromField(fieldValue(fields, 'motion')),
+    stylingFeature: textFromField(fieldValue(fields, 'stylingFeature')),
+    brandIdentity: textFromField(fieldValue(fields, 'brandIdentity')),
+    proportion: textFromField(fieldValue(fields, 'proportion')),
+    detailDesign: textFromField(fieldValue(fields, 'detailDesign')),
+    materialColor: textFromField(fieldValue(fields, 'materialColor')),
   };
 }
 
@@ -231,15 +327,15 @@ export function discussionRecordToEntity(record) {
   const fields = record.fields || {};
   return {
     recordId: record.record_id,
-    id: textFromField(fields.linkId, record.record_id),
-    vehicleId: textFromField(fields.vehicleId),
-    platform: textFromField(fields.platform),
-    title: textFromField(fields.title),
-    url: textFromField(fields.url),
-    heat: textFromField(fields.heat),
-    summary: textFromField(fields.summary),
-    sentiment: textFromField(fields.sentiment, '中性'),
-    referenceValue: textFromField(fields.referenceValue),
+    id: textFromField(fieldValue(fields, 'linkId'), record.record_id),
+    vehicleId: textFromField(fieldValue(fields, 'vehicleId')),
+    platform: textFromField(fieldValue(fields, 'platform')),
+    title: textFromField(fieldValue(fields, 'title')),
+    url: textFromField(fieldValue(fields, 'url')),
+    heat: textFromField(fieldValue(fields, 'heat')),
+    summary: textFromField(fieldValue(fields, 'summary')),
+    sentiment: textFromField(fieldValue(fields, 'sentiment'), '中性'),
+    referenceValue: textFromField(fieldValue(fields, 'referenceValue')),
   };
 }
 
@@ -261,13 +357,13 @@ export function versionRecordToEntity(record) {
   const fields = record.fields || {};
   return {
     recordId: record.record_id,
-    id: textFromField(fields.logId, record.record_id),
-    vehicleId: textFromField(fields.vehicleId),
-    yearModel: textFromField(fields.yearModel),
-    changeTime: textFromField(fields.changeTime),
-    changeTypes: arrayFromField(fields.changeTypes),
-    description: textFromField(fields.description),
-    designImpact: textFromField(fields.designImpact),
+    id: textFromField(fieldValue(fields, 'logId'), record.record_id),
+    vehicleId: textFromField(fieldValue(fields, 'vehicleId')),
+    yearModel: textFromField(fieldValue(fields, 'yearModel')),
+    changeTime: textFromField(fieldValue(fields, 'changeTime')),
+    changeTypes: arrayFromField(fieldValue(fields, 'changeTypes')),
+    description: textFromField(fieldValue(fields, 'description')),
+    designImpact: textFromField(fieldValue(fields, 'designImpact')),
   };
 }
 

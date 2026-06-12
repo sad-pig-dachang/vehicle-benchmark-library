@@ -241,38 +241,38 @@ VERSION_TABLE_ID=
 
 用于保存车型主记录，对应 `VEHICLE_TABLE_ID`。
 
-字段建议：
+字段建议优先使用中文表头。后端同时兼容旧英文表头，所以已经导入的英文表不会立刻失效；但后续维护建议改成中文。
 
-| 字段名 | 类型建议 | 对应 Vehicle 字段 |
+| 字段名 | 类型建议 | 说明 |
 | --- | --- | --- |
-| vehicleId | 单行文本 | id |
-| brand | 单行文本 | brand |
-| model | 单行文本 | model |
-| year | 单行文本 | year |
-| market | 单选 | market |
-| countryRegion | 单行文本 | countryRegion |
-| level | 单选 | level |
-| energy | 单选 | energy |
-| priceMin | 数字 | priceMin |
-| priceMax | 数字 | priceMax |
-| coverImageUrl | URL / 文本 | coverImage.url |
-| coverImageTitle | 单行文本 | coverImage.title |
-| coverImageAlt | 单行文本 | coverImage.alt |
-| coverImageSource | 单行文本 | coverImage.source |
-| productPositioning | 多行文本 | productPositioning |
-| targetUsers | 多行文本 | targetUsers |
-| summary | 多行文本 | summary |
-| keyTags | 多选 / 多行文本 | keyTags |
-| scenarioTags | 多选 / 多行文本 | scenarioTags |
-| hmiTags | 多选 / 多行文本 | hmiTags |
-| stylingTags | 多选 / 多行文本 | stylingTags |
-| status | 单选 | status |
-| completeness | 数字 | completeness |
-| updatedAt | 单行文本 | updatedAt |
-| isKeyModel | 复选框 | isKeyModel |
-| coreHighlights | 多选 / 多行文本 | coreHighlights |
-| designFocus | 多选 / 多行文本 | designFocus |
-| benchmarkSuitability | 多选 / 多行文本 | benchmarkSuitability |
+| 车型ID | 单行文本 | 唯一 ID，例如 `xiaomi-yu7-2025` |
+| 品牌 | 单行文本 | 品牌 |
+| 车型 | 单行文本 | 车型名称 |
+| 年款 | 单行文本 | 年款 |
+| 市场 | 单选 | 国内 / 海外 |
+| 国家/地区 | 单行文本 | 国家或地区 |
+| 车型级别 | 单选 | 轿车 / SUV / MPV / 皮卡 / 跑车 |
+| 能源形式 | 单选 | 纯电 / 插混 / 增程 / 燃油 / 混动 |
+| 最低价格 | 数字 | 万元 |
+| 最高价格 | 数字 | 万元 |
+| 封面图链接 | URL / 文本 | 图片 URL |
+| 封面图标题 | 单行文本 | 图片标题 |
+| 封面图说明 | 单行文本 | 图片说明 |
+| 封面图来源 | 单行文本 | 图片来源 |
+| 产品定位 | 多行文本 | 产品定位 |
+| 目标用户 | 多行文本 | 目标用户 |
+| 车型一句话总结 | 多行文本 | 一句话总结 |
+| 关键标签 | 多选 / 多行文本 | 多个标签 |
+| 使用场景标签 | 多选 / 多行文本 | 多个标签 |
+| HMI标签 | 多选 / 多行文本 | 多个标签 |
+| 内外饰标签 | 多选 / 多行文本 | 多个标签 |
+| 数据状态 | 单选 | 已完成 / 调研中 / 待补充 |
+| 数据完整度 | 数字 | 0-100 |
+| 更新时间 | 单行文本 / 日期 | 更新时间 |
+| 重点车型 | 复选框 | 是否重点车型 |
+| 核心特点 | 多选 / 多行文本 | 3-5 条核心特点 |
+| 设计看点 | 多选 / 多行文本 | 设计 / 体验 / HMI / 智驾 / 品牌看点 |
+| 适合对标类型 | 多选 / 多行文本 | 适合做什么对标 |
 
 #### 2. Specs 表
 
@@ -280,8 +280,8 @@ VERSION_TABLE_ID=
 
 | 字段名 | 类型建议 | 说明 |
 | --- | --- | --- |
-| vehicleId | 单行文本 | 关联 Vehicle.vehicleId |
-| specJson | 多行文本 | `VehicleSpec` JSON |
+| 车型ID | 单行文本 | 关联 Vehicle 表的车型ID |
+| 参数JSON | 多行文本 | `VehicleSpec` JSON |
 
 #### 3. Benchmark 表
 
@@ -289,27 +289,27 @@ VERSION_TABLE_ID=
 
 | 字段名 | 类型建议 | 说明 |
 | --- | --- | --- |
-| vehicleId | 单行文本 | 关联车型 |
-| pointId | 单行文本 | 对标点 ID |
-| category | 单选 | experience / hmi / exterior / interior |
-| title | 单行文本 | 标题 |
-| description | 多行文本 | 通用描述 |
-| sceneDescription | 多行文本 | 场景描述 |
-| userValue | 多行文本 | 用户价值 |
-| highlight | 多行文本 | 亮点 |
-| issue | 多行文本 | 问题 |
-| referenceValue | 多行文本 | 可借鉴点 |
-| mediaJson | 多行文本 | `MediaAsset` JSON |
-| interfaceLocation | 单行文本 | HMI 界面位置 |
-| interactionMode | 单行文本 | HMI 交互方式 |
-| visualStyle | 多行文本 | HMI 视觉风格 |
-| informationArchitecture | 多行文本 | 信息架构 |
-| motion | 多行文本 | 动效 |
-| stylingFeature | 多行文本 | 造型特征 |
-| brandIdentity | 多行文本 | 品牌识别点 |
-| proportion | 多行文本 | 比例姿态 |
-| detailDesign | 多行文本 | 细节设计 |
-| materialColor | 多行文本 | 材质 / 色彩 |
+| 车型ID | 单行文本 | 关联车型 |
+| 对标点ID | 单行文本 | 对标点 ID |
+| 类别 | 单选 | 体验 / HMI / 外饰 / 内饰 |
+| 标题 | 单行文本 | 标题 |
+| 描述 | 多行文本 | 通用描述 |
+| 场景描述 | 多行文本 | 场景描述 |
+| 用户价值 | 多行文本 | 用户价值 |
+| 体验亮点 | 多行文本 | 亮点 |
+| 问题 | 多行文本 | 问题 |
+| 可借鉴点 | 多行文本 | 可借鉴点 |
+| 媒体JSON | 多行文本 | `MediaAsset` JSON |
+| 界面位置 | 单行文本 | HMI 界面位置 |
+| 交互方式 | 单行文本 | HMI 交互方式 |
+| 视觉风格 | 多行文本 | HMI 视觉风格 |
+| 信息架构 | 多行文本 | 信息架构 |
+| 动效 | 多行文本 | 动效 |
+| 造型特征 | 多行文本 | 造型特征 |
+| 品牌识别点 | 多行文本 | 品牌识别点 |
+| 比例姿态 | 多行文本 | 比例姿态 |
+| 细节设计 | 多行文本 | 细节设计 |
+| 材质/色彩 | 多行文本 | 材质 / 色彩 |
 
 #### 4. Media 表
 
@@ -319,11 +319,11 @@ VERSION_TABLE_ID=
 
 | 字段名 | 类型建议 |
 | --- | --- |
-| vehicleId | 单行文本 |
+| 车型ID | 单行文本 |
 | assetId | 单行文本 |
 | type | 单选 |
-| url | URL / 文本 |
-| title | 单行文本 |
+| 链接 | URL / 文本 |
+| 标题 | 单行文本 |
 | alt | 单行文本 |
 | source | 单行文本 |
 
@@ -333,15 +333,15 @@ VERSION_TABLE_ID=
 
 | 字段名 | 类型建议 | 对应字段 |
 | --- | --- | --- |
-| vehicleId | 单行文本 | 关联车型 |
-| linkId | 单行文本 | id |
-| platform | 单选 / 文本 | platform |
-| title | 单行文本 | title |
-| url | URL / 文本 | url |
-| heat | 单行文本 | heat |
-| summary | 多行文本 | summary |
-| sentiment | 单选 | sentiment |
-| referenceValue | 多行文本 | referenceValue |
+| 车型ID | 单行文本 | 关联车型 |
+| 链接ID | 单行文本 | id |
+| 平台 | 单选 / 文本 | 平台 |
+| 标题 | 单行文本 | 标题 |
+| 链接 | URL / 文本 | URL |
+| 热度 | 单行文本 | 热度 |
+| 观点摘要 | 多行文本 | 摘要 |
+| 情绪倾向 | 单选 | 正向 / 中性 / 负向 |
+| 引用价值 | 多行文本 | 引用价值 |
 
 #### 6. Version 表
 
@@ -349,13 +349,13 @@ VERSION_TABLE_ID=
 
 | 字段名 | 类型建议 | 对应字段 |
 | --- | --- | --- |
-| vehicleId | 单行文本 | 关联车型 |
-| logId | 单行文本 | id |
-| yearModel | 单行文本 | yearModel |
-| changeTime | 单行文本 | changeTime |
-| changeTypes | 多选 / 多行文本 | changeTypes |
-| description | 多行文本 | description |
-| designImpact | 多行文本 | designImpact |
+| 车型ID | 单行文本 | 关联车型 |
+| 迭代记录ID | 单行文本 | id |
+| 年款/改款时间 | 单行文本 | 年款或改款节点 |
+| 改款时间 | 单行文本 | 变化时间 |
+| 变化类型 | 多选 / 多行文本 | 外饰 / 内饰 / HMI / 智驾 / 配置 / 动力 |
+| 描述 | 多行文本 | 变化描述 |
+| 对设计对标的影响 | 多行文本 | 影响说明 |
 
 ### 本地运行飞书模式
 

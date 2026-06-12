@@ -5,6 +5,7 @@ import {
   benchmarkToFields,
   discussionRecordToEntity,
   discussionToFields,
+  fieldValue,
   specRecordToEntity,
   specToFields,
   vehicleFieldsToEntity,
@@ -44,7 +45,7 @@ async function listJoinedData() {
   const versionLogs = versionRecords.map(versionRecordToEntity);
 
   return vehicleRecords.map((record) => {
-    const vehicleId = readFieldText(record.fields?.vehicleId, record.record_id);
+    const vehicleId = readFieldText(fieldValue(record.fields || {}, 'vehicleId'), record.record_id);
 
     return vehicleFieldsToEntity(record, {
       spec: specs.find((item) => item.vehicleId === vehicleId)?.spec || {},
@@ -58,7 +59,7 @@ async function listJoinedData() {
 async function findVehicleRecord(vehicleId) {
   const records = await listRecords(tables.vehicle);
   return records.find(
-    (record) => record.record_id === vehicleId || readFieldText(record.fields?.vehicleId) === vehicleId,
+    (record) => record.record_id === vehicleId || readFieldText(fieldValue(record.fields || {}, 'vehicleId')) === vehicleId,
   );
 }
 
@@ -150,7 +151,7 @@ export const vehicleRepository = {
     const record = await findVehicleRecord(vehicleId);
     if (!record) return false;
 
-    const canonicalVehicleId = readFieldText(record.fields?.vehicleId, vehicleId);
+    const canonicalVehicleId = readFieldText(fieldValue(record.fields || {}, 'vehicleId'), vehicleId);
     await deleteChildren(canonicalVehicleId);
     await deleteRecord(tables.vehicle, record.record_id);
     return true;
