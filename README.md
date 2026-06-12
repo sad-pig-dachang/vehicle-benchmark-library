@@ -1,5 +1,7 @@
 # 汽车竞品车型库 Demo
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/sad-pig-dachang/vehicle-benchmark-library)
+
 面向汽车设计、HMI、产品体验团队的竞品车型资料库前端 demo。项目使用 React + Vite + TypeScript，默认通过浏览器 `localStorage` 保存数据。
 
 ## 运行
