@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: vehicle-benchmark-library
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: VITE_DATA_SOURCE
+        value: feishu
+      - key: VITE_API_BASE_URL
+        value: /api
+      - key: CORS_ORIGIN
+        sync: false
+      - key: FEISHU_APP_ID
+        sync: false
+      - key: FEISHU_APP_SECRET
+        sync: false
+      - key: BASE_APP_TOKEN
+        sync: false
+      - key: VEHICLE_TABLE_ID
+        sync: false
+      - key: SPECS_TABLE_ID
+        sync: false
+      - key: BENCHMARK_TABLE_ID
+        sync: false
+      - key: MEDIA_TABLE_ID
+        sync: false
+      - key: DISCUSSION_TABLE_ID
+        sync: false
+      - key: VERSION_TABLE_ID
+        sync: false
