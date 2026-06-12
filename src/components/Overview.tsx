@@ -1,4 +1,4 @@
-import { AlertCircle, BadgeCheck, Building2, CarFront, Plus } from 'lucide-react';
+import { AlertCircle, BadgeCheck, Building2, CarFront } from 'lucide-react';
 import type { Vehicle } from '../types/vehicle';
 import { VehicleCard } from './VehicleCard';
 
@@ -14,8 +14,6 @@ interface OverviewProps {
   stats: OverviewStats;
   compareIds: string[];
   onOpen: (vehicle: Vehicle) => void;
-  onEdit: (vehicle: Vehicle) => void;
-  onAdd: () => void;
   onToggleCompare: (vehicle: Vehicle) => void;
 }
 
@@ -31,8 +29,6 @@ export function Overview({
   stats,
   compareIds,
   onOpen,
-  onEdit,
-  onAdd,
   onToggleCompare,
 }: OverviewProps) {
   return (
@@ -45,10 +41,6 @@ export function Overview({
             用于汽车设计、HMI 与产品体验团队沉淀车型资料、对标点、讨论链接和迭代记录。
           </p>
         </div>
-        <button className="primary-button primary-button--large" type="button" onClick={onAdd}>
-          <Plus size={18} />
-          新增车型
-        </button>
       </section>
 
       <section className="stats-grid">
@@ -68,7 +60,6 @@ export function Overview({
             isCompareDisabled={compareIds.length >= 3}
             key={vehicle.id}
             vehicle={vehicle}
-            onEdit={onEdit}
             onOpen={onOpen}
             onToggleCompare={onToggleCompare}
           />
@@ -78,10 +69,7 @@ export function Overview({
       {!vehicles.length && (
         <div className="empty-state">
           <h3>没有匹配的车型</h3>
-          <p>可以放宽筛选条件，或新增一台车型继续整理资料。</p>
-          <button className="secondary-button" type="button" onClick={onAdd}>
-            新增车型
-          </button>
+          <p>可以放宽筛选条件，或在飞书多维表格中补充车型资料。</p>
         </div>
       )}
     </main>

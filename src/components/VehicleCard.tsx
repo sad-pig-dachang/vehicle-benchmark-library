@@ -1,4 +1,4 @@
-import { Edit3, ExternalLink, GitCompare } from 'lucide-react';
+import { ExternalLink, GitCompare } from 'lucide-react';
 import { formatPrice } from '../constants/options';
 import type { Vehicle } from '../types/vehicle';
 import { TagList } from './TagList';
@@ -8,7 +8,6 @@ interface VehicleCardProps {
   isCompared: boolean;
   isCompareDisabled: boolean;
   onOpen: (vehicle: Vehicle) => void;
-  onEdit: (vehicle: Vehicle) => void;
   onToggleCompare: (vehicle: Vehicle) => void;
 }
 
@@ -17,7 +16,6 @@ export function VehicleCard({
   isCompared,
   isCompareDisabled,
   onOpen,
-  onEdit,
   onToggleCompare,
 }: VehicleCardProps) {
   return (
@@ -57,9 +55,6 @@ export function VehicleCard({
           <button className="primary-button" type="button" onClick={() => onOpen(vehicle)}>
             <ExternalLink size={16} />
             打开档案
-          </button>
-          <button className="icon-button" title="编辑车型" type="button" onClick={() => onEdit(vehicle)}>
-            <Edit3 size={16} />
           </button>
           <button
             className={`icon-button ${isCompared ? 'is-active' : ''}`}

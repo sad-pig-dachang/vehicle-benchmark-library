@@ -20,7 +20,9 @@ app.use((req, res, next) => {
     .filter(Boolean);
   const requestOrigin = req.headers.origin;
 
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+  if (allowedOrigins.includes('*')) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
     res.setHeader('Access-Control-Allow-Origin', requestOrigin);
   }
 

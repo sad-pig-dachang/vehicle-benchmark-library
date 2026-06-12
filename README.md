@@ -35,9 +35,8 @@ http://localhost:8787
 - 右侧总览页：数据概览、车型卡片列表、筛选后实时更新。
 - 单车型档案页：基础信息、车型特点、体验场景、HMI、内外饰、资料链接、车型迭代记录。
 - 对比功能：支持 2-3 台车按基础参数、定位、体验、HMI、内饰、外饰、讨论度、可借鉴点横向对比。
-- 新增 / 编辑 / 删除车型：编辑表单按 Tab 分组，复杂字段可直接维护 JSON。
-- 导入 / 导出 JSON：便于把调研资料迁移到其他环境。
-- 本地持久化：刷新页面后保留编辑结果。
+- 只读展示：网站不提供新增、编辑、删除入口，所有数据维护都在飞书多维表格内完成。
+- 导出 JSON：便于沉淀快照或迁移资料。
 
 ## 数据结构
 
@@ -62,19 +61,7 @@ http://localhost:8787
 
 ## 如何编辑数据
 
-页面内可以直接点击「新增车型」或车型卡片上的编辑按钮。
-
-编辑弹窗分为：
-
-1. 基础信息
-2. 体验场景
-3. HMI
-4. 内外饰
-5. 资料链接
-6. 迭代记录
-7. JSON 高级编辑
-
-基础信息是普通表单；体验、HMI、造型、链接、迭代记录等嵌套资料使用 JSON 编辑区，适合早期快速整理和粘贴结构化调研内容。
+线上网站是只读展示端，不开放新增、编辑、删除。请在飞书多维表格内维护车型、参数、对标点、资料链接和迭代记录；网站刷新后会从飞书重新读取最新数据。
 
 ## 本地存储说明
 
@@ -94,27 +81,9 @@ src/services/dataService.ts
 
 如果需要恢复内置示例数据，点击页面右上角的刷新按钮即可。注意这会覆盖当前浏览器里的本地修改。
 
-## 导入 / 导出 JSON
+## 导出 JSON
 
-右上角提供「导出 JSON」和「导入 JSON」。
-
-导入文件支持两种格式：
-
-```json
-[
-  { "id": "vehicle-1", "brand": "..." }
-]
-```
-
-或：
-
-```json
-{
-  "vehicles": [
-    { "id": "vehicle-1", "brand": "..." }
-  ]
-}
-```
+右上角提供「导出 JSON」，用于保存当前飞书数据快照。线上网站不支持导入 JSON，避免公开页面被用来写入数据。
 
 ## 飞书多维表格接入预留
 
@@ -170,7 +139,8 @@ VITE_DATA_SOURCE=feishu
 VITE_API_BASE_URL=/api
 
 PORT=8787
-CORS_ORIGIN=https://你的线上域名
+CORS_ORIGIN=*
+ALLOW_WRITES=false
 
 FEISHU_APP_ID=你的飞书应用 App ID
 FEISHU_APP_SECRET=你的飞书应用 App Secret
@@ -189,6 +159,7 @@ VERSION_TABLE_ID=迭代表 ID
 - `npm run start` 会启动 `server/index.js`。
 - Express 会自动托管 `dist`，并提供 `/api`。
 - 线上访问根路径就是前端页面，例如 `https://你的线上域名/`。
+- 网站默认只读，`ALLOW_WRITES=false` 时后端会拒绝所有 POST / PUT / DELETE 请求。
 
 ### 可选部署方式：前后端分开
 
@@ -203,25 +174,23 @@ VITE_API_BASE_URL=https://你的后端域名/api
 
 ```bash
 CORS_ORIGIN=https://你的前端域名
+ALLOW_WRITES=false
 ```
 
 这种方式也可用，但多一个跨域配置点。团队内部工具优先建议使用“前后端同服务”。
 
 ### 后端接口
 
-已实现：
+公开只读接口：
 
 ```txt
 GET    /api/vehicles
 GET    /api/vehicles/:vehicleId
-POST   /api/vehicles
-PUT    /api/vehicles/:vehicleId
-DELETE /api/vehicles/:vehicleId
 GET    /api/benchmark-points?vehicleId=xxx
-POST   /api/benchmark-points
-PUT    /api/benchmark-points/:recordId
 GET    /api/discussions?vehicleId=xxx
 ```
+
+代码里保留了写接口实现，方便未来做私有管理后台；但公开部署默认 `ALLOW_WRITES=false`，后端会拒绝 `POST / PUT / DELETE`。
 
 辅助检查：
 
@@ -240,6 +209,7 @@ VITE_API_BASE_URL=/api
 
 PORT=8787
 CORS_ORIGIN=http://localhost:5173
+ALLOW_WRITES=false
 
 FEISHU_APP_ID=
 FEISHU_APP_SECRET=
@@ -256,10 +226,10 @@ VERSION_TABLE_ID=
 
 ### 飞书多维表格权限
 
-飞书应用需要开通多维表格记录读写权限，并把应用添加到目标多维表格的协作者中。后端使用：
+飞书应用只需要开通多维表格记录读取相关权限，并把应用添加到目标多维表格的协作者中。网站默认只读，不通过后端写入飞书。
 
 - `tenant_access_token`：通过 `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET` 获取。
-- Records API：对指定 app token 和 table id 做记录列表、新增、更新、删除。
+- Records API：对指定 app token 和 table id 做记录列表读取。
 
 ### 需要创建的表
 
@@ -411,6 +381,5 @@ http://localhost:5173
 ## 推荐后续增强
 
 - 给每个对标点增加附件上传和本地图片缓存。
-- 增加字段级校验，避免 JSON 高级编辑缺失必要字段。
 - 增加多维表格字段映射配置页。
 - 增加导出对比报告能力。

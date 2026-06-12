@@ -2,7 +2,6 @@ import {
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
-  Edit3,
   ExternalLink,
   GitCompare,
   ImageIcon,
@@ -18,7 +17,6 @@ interface VehicleProfileProps {
   isCompared: boolean;
   isCompareDisabled: boolean;
   onBack: () => void;
-  onEdit: (vehicle: Vehicle) => void;
   onToggleCompare: (vehicle: Vehicle) => void;
 }
 
@@ -96,7 +94,6 @@ export function VehicleProfile({
   isCompared,
   isCompareDisabled,
   onBack,
-  onEdit,
   onToggleCompare,
 }: VehicleProfileProps) {
   return (
@@ -107,10 +104,6 @@ export function VehicleProfile({
           返回总览
         </button>
         <div className="toolbar-actions">
-          <button className="secondary-button" type="button" onClick={() => onEdit(vehicle)}>
-            <Edit3 size={16} />
-            编辑
-          </button>
           <button
             className={`secondary-button ${isCompared ? 'is-active' : ''}`}
             disabled={!isCompared && isCompareDisabled}

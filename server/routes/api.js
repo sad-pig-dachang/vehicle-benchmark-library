@@ -4,6 +4,7 @@ import { getTenantAccessToken } from '../feishuClient.js';
 import { vehicleRepository } from '../repositories/vehicleRepository.js';
 
 export const apiRouter = Router();
+const allowWrites = process.env.ALLOW_WRITES === 'true';
 
 function asyncHandler(handler) {
   return async (req, res, next) => {
@@ -27,6 +28,17 @@ apiRouter.get(
     res.json({ ok: true });
   }),
 );
+
+apiRouter.use((req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !allowWrites) {
+    res.status(403).json({
+      message: 'This public site is read-only. Edit data in Feishu Bitable instead.',
+    });
+    return;
+  }
+
+  next();
+});
 
 apiRouter.get(
   '/vehicles',
