@@ -43,6 +43,10 @@ export function App() {
       .catch((error) => setLoadError(error instanceof Error ? error.message : '加载数据失败'));
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [selectedVehicleId, viewMode]);
+
   const availableScenarioTags = useMemo(
     () => unique(vehicles.flatMap((vehicle) => vehicle.scenarioTags)),
     [vehicles],
