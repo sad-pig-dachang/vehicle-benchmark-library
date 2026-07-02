@@ -1,4 +1,5 @@
 import { ExternalLink, GitCompare } from 'lucide-react';
+import heroImage from '../assets/figma-yu7-optimized/hero.jpg';
 import { formatPrice } from '../constants/options';
 import type { Vehicle } from '../types/vehicle';
 import { TagList } from './TagList';
@@ -18,11 +19,14 @@ export function VehicleCard({
   onOpen,
   onToggleCompare,
 }: VehicleCardProps) {
+  const isYu7 = vehicle.brand.includes('小米') && vehicle.model.toUpperCase().includes('YU7');
+  const coverUrl = isYu7 ? heroImage : vehicle.coverImage.url;
+
   return (
     <article className="vehicle-card">
       <div
         className="vehicle-card__image"
-        style={{ backgroundImage: `url(${vehicle.coverImage.url})` }}
+        style={{ backgroundImage: `url(${coverUrl})` }}
         aria-label={vehicle.coverImage.alt}
       >
         <span className={`status-pill status-pill--${vehicle.status}`}>{vehicle.status}</span>

@@ -108,6 +108,8 @@ export function App() {
   const compareVehicles = compareIds
     .map((id) => vehicles.find((vehicle) => vehicle.id === id))
     .filter(Boolean) as Vehicle[];
+  const showFilters = viewMode === 'overview';
+  const showWorkspaceHeader = viewMode !== 'profile';
 
   const toggleCompare = (vehicle: Vehicle) => {
     setCompareIds((prev) => {
@@ -166,41 +168,45 @@ export function App() {
   };
 
   return (
-    <div className="app-shell">
-      <FilterSidebar
-        availableHmiTags={availableHmiTags}
-        availableScenarioTags={availableScenarioTags}
-        availableStylingTags={availableStylingTags}
-        filters={filters}
-        resultCount={filteredVehicles.length}
-        totalCount={vehicles.length}
-        onChange={setFilters}
-        onReset={() => setFilters(defaultFilters)}
-      />
+    <div className={`app-shell ${showFilters ? '' : 'app-shell--immersive'}`}>
+      {showFilters && (
+        <FilterSidebar
+          availableHmiTags={availableHmiTags}
+          availableScenarioTags={availableScenarioTags}
+          availableStylingTags={availableStylingTags}
+          filters={filters}
+          resultCount={filteredVehicles.length}
+          totalCount={vehicles.length}
+          onChange={setFilters}
+          onReset={() => setFilters(defaultFilters)}
+        />
+      )}
 
-      <div className="workspace">
-        <header className="workspace-header">
-          <div>
-            <span>当前数据源：{dataSourceLabel}</span>
-            <strong>设计 / HMI / 产品体验团队内部工具 Demo</strong>
-          </div>
-          <div className="toolbar-actions">
-            <button
-              className="secondary-button"
-              disabled={compareIds.length < 2}
-              title="打开对比页"
-              type="button"
-              onClick={() => setViewMode('compare')}
-            >
-              <GitCompare size={16} />
-              对比 {compareIds.length}
-            </button>
-            <button className="secondary-button" type="button" onClick={exportJson}>
-              <Download size={16} />
-              导出 JSON
-            </button>
-          </div>
-        </header>
+      <div className={`workspace ${showFilters ? '' : 'workspace--immersive'}`}>
+        {showWorkspaceHeader && (
+          <header className="workspace-header">
+            <div>
+              <span>当前数据源：{dataSourceLabel}</span>
+              <strong>设计 / HMI / 产品体验团队内部工具 Demo</strong>
+            </div>
+            <div className="toolbar-actions">
+              <button
+                className="secondary-button"
+                disabled={compareIds.length < 2}
+                title="打开对比页"
+                type="button"
+                onClick={() => setViewMode('compare')}
+              >
+                <GitCompare size={16} />
+                对比 {compareIds.length}
+              </button>
+              <button className="secondary-button" type="button" onClick={exportJson}>
+                <Download size={16} />
+                导出 JSON
+              </button>
+            </div>
+          </header>
+        )}
 
         {loadError ? (
           <div className="empty-state">

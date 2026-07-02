@@ -1,4 +1,5 @@
 import type { BenchmarkPoint, MediaAsset, Vehicle } from '../types/vehicle';
+import yu7HeroImage from '../assets/figma-yu7-optimized/hero.jpg';
 
 const image = (id: string, url: string, title: string, source = 'Demo image'): MediaAsset => ({
   id,
@@ -12,7 +13,7 @@ const image = (id: string, url: string, title: string, source = 'Demo image'): M
 const coverImages = {
   yu7: image(
     'media-xiaomi-yu7-cover',
-    'https://images.unsplash.com/photo-1549925862-9900b4971e24?auto=format&fit=crop&w=1600&q=80',
+    yu7HeroImage,
     '小米 YU7 外观资料图',
   ),
   zeekr007: image(
@@ -143,8 +144,8 @@ export const sampleVehicles: Vehicle[] = [
     countryRegion: '中国',
     level: 'SUV',
     energy: '纯电',
-    priceMin: 25,
-    priceMax: 35,
+    priceMin: 25.35,
+    priceMax: 42.99,
     coverImage: coverImages.yu7,
     productPositioning: '面向年轻家庭与科技用户的高性能智能 SUV，强调生态互联、运动比例和高效率补能。',
     targetUsers: '已有智能设备使用习惯、关注驾驶性能与座舱体验的一二线城市家庭用户。',

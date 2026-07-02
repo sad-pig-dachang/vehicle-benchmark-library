@@ -1,4 +1,5 @@
 import { AlertCircle, BadgeCheck, Building2, CarFront } from 'lucide-react';
+import heroImage from '../assets/figma-yu7-optimized/hero.jpg';
 import type { Vehicle } from '../types/vehicle';
 import { VehicleCard } from './VehicleCard';
 
@@ -33,13 +34,20 @@ export function Overview({
 }: OverviewProps) {
   return (
     <main className="overview-page">
-      <section className="overview-hero">
+      <section className="overview-hero overview-hero--figma" style={{ backgroundImage: `url(${heroImage})` }}>
+        <div className="overview-hero__scrim" />
         <div>
-          <p className="eyebrow">Competition Intelligence</p>
-          <h2>竞品车型总览</h2>
+          <p className="eyebrow">Vehicle Benchmark / Full Profile</p>
+          <h2>竞品车型库</h2>
           <p>
-            用于汽车设计、HMI 与产品体验团队沉淀车型资料、对标点、讨论链接和迭代记录。
+            面向汽车设计、HMI 与产品体验团队，按 L1 用户市场、L2 车型档案、L3 对标分析、L4 设计借鉴、L5 测评追溯组织单车资料。
           </p>
+          <div className="overview-hero__tags">
+            <span>L1-L5 单车档案</span>
+            <span>体验场景对标</span>
+            <span>HMI / 内外饰</span>
+            <span>飞书数据源</span>
+          </div>
         </div>
       </section>
 
