@@ -29,11 +29,6 @@ export function requireFeishuConfig() {
   if (!config.feishu.baseAppToken && !config.feishu.wikiNodeToken) {
     missing.push('BASE_APP_TOKEN or WIKI_NODE_TOKEN');
   }
-  if (!config.feishu.tables.vehicle) missing.push('VEHICLE_TABLE_ID');
-  if (!config.feishu.tables.specs) missing.push('SPECS_TABLE_ID');
-  if (!config.feishu.tables.benchmark) missing.push('BENCHMARK_TABLE_ID');
-  if (!config.feishu.tables.discussion) missing.push('DISCUSSION_TABLE_ID');
-  if (!config.feishu.tables.version) missing.push('VERSION_TABLE_ID');
 
   if (missing.length) {
     throw new Error(`Missing Feishu environment variables: ${missing.join(', ')}`);

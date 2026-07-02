@@ -117,6 +117,28 @@ export async function listRecords(tableId) {
   return items;
 }
 
+export async function listTables() {
+  const items = [];
+  let pageToken = '';
+  const appToken = encodeURIComponent(await getBaseAppToken());
+
+  do {
+    const search = new URLSearchParams({ page_size: '100' });
+    if (pageToken) search.set('page_token', pageToken);
+
+    const payload = await feishuFetch(
+      `/bitable/v1/apps/${appToken}/tables?${search.toString()}`,
+      { method: 'GET' },
+      'List bitable tables',
+    );
+
+    items.push(...(payload.data?.items || []));
+    pageToken = payload.data?.has_more ? payload.data?.page_token || '' : '';
+  } while (pageToken);
+
+  return items;
+}
+
 export async function getRecord(tableId, recordId) {
   const payload = await feishuFetch(await recordsPath(tableId, recordId), { method: 'GET' }, `Get record ${recordId}`);
   return payload.data?.record;

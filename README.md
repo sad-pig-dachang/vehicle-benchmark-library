@@ -146,12 +146,12 @@ FEISHU_APP_ID=你的飞书应用 App ID
 FEISHU_APP_SECRET=你的飞书应用 App Secret
 BASE_APP_TOKEN=你的多维表格 App Token
 WIKI_NODE_TOKEN=如果你的链接是 /wiki/ 形式，填 wiki 后面的 token，可替代 BASE_APP_TOKEN
-VEHICLE_TABLE_ID=车型主表 ID
-SPECS_TABLE_ID=参数表 ID
-BENCHMARK_TABLE_ID=对标点表 ID
-MEDIA_TABLE_ID=媒体表 ID
-DISCUSSION_TABLE_ID=讨论链接表 ID
-VERSION_TABLE_ID=迭代表 ID
+# 以下表 ID 现在是可选项。后端会优先按中文表名自动识别。
+VEHICLE_TABLE_ID=
+SPECS_TABLE_ID=
+BENCHMARK_TABLE_ID=
+DISCUSSION_TABLE_ID=
+VERSION_TABLE_ID=
 ```
 
 说明：
@@ -216,15 +216,43 @@ FEISHU_APP_ID=
 FEISHU_APP_SECRET=
 BASE_APP_TOKEN=
 WIKI_NODE_TOKEN=
+
+# 可选。通常不需要手填，后端会按表名自动找：
+# 档案基础信息1 / 档案基础信息
+# L1-用户市场层1 / L1-用户市场层
+# L2-竞品档案层1 / L2-竞品档案层
+# L3-场景对标分析层1 / L3-场景对标分析层
+# L3-具体功能亮点1 / L3-具体功能亮点
+# L3-造型机会点1 / L3-造型机会点
+# L4-设计对标层1 / L4-设计对标层
+# L5-测评与追溯层1 / L5-测评与追溯层
 VEHICLE_TABLE_ID=
 SPECS_TABLE_ID=
 BENCHMARK_TABLE_ID=
-MEDIA_TABLE_ID=
 DISCUSSION_TABLE_ID=
 VERSION_TABLE_ID=
 ```
 
-`BASE_APP_TOKEN` 是多维表格 app token；如果你的飞书链接是 `/wiki/xxx?table=...` 这种形式，可以不填 `BASE_APP_TOKEN`，改填 `WIKI_NODE_TOKEN=xxx`。后端会通过飞书 Wiki 节点信息接口解析出真正的多维表格 app token。各 `*_TABLE_ID` 是对应数据表 ID。
+`BASE_APP_TOKEN` 是多维表格 app token；如果你的飞书链接是 `/wiki/xxx?table=...` 这种形式，可以不填 `BASE_APP_TOKEN`，改填 `WIKI_NODE_TOKEN=xxx`。后端会通过飞书 Wiki 节点信息接口解析出真正的多维表格 app token。各 `*_TABLE_ID` 现在是可选兜底项：当自动表名识别失败时再手填。
+
+### 当前中文表结构
+
+网站现在优先读取中文表名，且只把 `档案基础信息1` / `档案基础信息` 作为必需主表。其他 L1-L5 表都是增强信息，缺失或删掉不会让整站加载失败。
+
+推荐保留这些表：
+
+| 表名 | 用途 | 网站容错 |
+| --- | --- | --- |
+| 档案基础信息1 | 车型主表，一车一行，承载列表和详情页必需字段 | 必需 |
+| L1-用户市场层1 | 用户画像、市场卖点、定位标签 | 可选 |
+| L2-竞品档案层1 | 核心参数、版本信息、硬件配置 | 可选 |
+| L3-场景对标分析层1 | 体验场景卡片 | 可选 |
+| L3-具体功能亮点1 | 场景下的功能拆解 | 可选 |
+| L3-造型机会点1 | 外饰、内饰、材质色彩机会点 | 可选 |
+| L4-设计对标层1 | 设计、体验、HMI、智驾、品牌上的可借鉴总结 | 可选 |
+| L5-测评与追溯层1 | 资料链接、热帖、评分、迭代记录 | 可选 |
+
+主表建议至少保留这些字段：`车型ID`、`品牌`、`车型`、`年款`、`国内/海外`、`国家/地区`、`车型级别`、`能源形式`、`价格下限（万元）`、`价格上限（万元）`、`产品定位`、`目标用户`、`车型一句话总结`、`关键标签`、`数据状态`、`数据完整度`、`是否重点车型`、`更新时间`、`核心特点`、`设计看点`、`适合对标类型`、`参数JSON`。
 
 ### 飞书多维表格权限
 

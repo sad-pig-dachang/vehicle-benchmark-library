@@ -15,7 +15,7 @@ const arrayFromField = (value) => {
 
   if (typeof value === 'string') {
     return value
-      .split(/\n|,/)
+      .split(/\n|,|，|、|;|；/)
       .map((item) => item.trim())
       .filter(Boolean);
   }
@@ -69,6 +69,32 @@ const jsonFromField = (value, fallback) => {
 const jsonToField = (value) => JSON.stringify(value || {}, null, 2);
 const arrayToField = (items = []) => items;
 
+const firstNumber = (value) => {
+  const match = textFromField(value).match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : undefined;
+};
+
+const normalizeSpec = (spec = {}) => {
+  const sizeText = textFromField(spec.长宽高 || spec.size || spec.dimensions);
+  const sizeNumbers = sizeText.match(/\d+(\.\d+)?/g)?.map(Number) || [];
+
+  return {
+    lengthMm: spec.lengthMm ?? spec.车长 ?? sizeNumbers[0],
+    widthMm: spec.widthMm ?? spec.车宽 ?? sizeNumbers[1],
+    heightMm: spec.heightMm ?? spec.车高 ?? sizeNumbers[2],
+    wheelbaseMm: spec.wheelbaseMm ?? firstNumber(spec.轴距),
+    seats: spec.seats ?? spec.座位数,
+    drivetrain: spec.drivetrain ?? spec.驱动形式,
+    batteryKwh: spec.batteryKwh ?? spec.电池容量,
+    cltcRangeKm: spec.cltcRangeKm ?? spec.CLTC续航 ?? spec.CLTC续航里程,
+    engineOrMotor: spec.engineOrMotor ?? spec.动力系统 ?? spec.电机,
+    acceleration0100: spec.acceleration0100 ?? spec.零百加速,
+    cockpitChip: spec.cockpitChip ?? spec.座舱芯片,
+    screenLayout: spec.screenLayout ?? spec.屏幕布局,
+    assistDriving: spec.assistDriving ?? spec.辅助驾驶,
+  };
+};
+
 export const fieldAliases = {
   vehicleId: ['vehicleId', '车型ID', '车型编号', '车辆ID'],
   brand: ['brand', '品牌'],
@@ -78,8 +104,8 @@ export const fieldAliases = {
   countryRegion: ['countryRegion', '国家/地区', '国家地区'],
   level: ['level', '车型级别', '级别'],
   energy: ['energy', '能源形式', '能源'],
-  priceMin: ['priceMin', '最低价格', '价格下限', '价格区间最低'],
-  priceMax: ['priceMax', '最高价格', '价格上限', '价格区间最高'],
+  priceMin: ['priceMin', '最低价格', '价格下限', '价格区间最低', '价格下限（万元）', '价格下限(万元)'],
+  priceMax: ['priceMax', '最高价格', '价格上限', '价格区间最高', '价格上限（万元）', '价格上限(万元)'],
   coverImageUrl: ['coverImageUrl', '封面图链接', '封面图URL'],
   coverImageTitle: ['coverImageTitle', '封面图标题'],
   coverImageAlt: ['coverImageAlt', '封面图说明'],
@@ -94,11 +120,17 @@ export const fieldAliases = {
   status: ['status', '数据状态'],
   completeness: ['completeness', '数据完整度'],
   updatedAt: ['updatedAt', '更新时间'],
-  isKeyModel: ['isKeyModel', '重点车型'],
+  isKeyModel: ['isKeyModel', '重点车型', '是否重点车型'],
   coreHighlights: ['coreHighlights', '核心特点'],
   designFocus: ['designFocus', '设计看点'],
   benchmarkSuitability: ['benchmarkSuitability', '适合对标类型'],
   specJson: ['specJson', '参数JSON', '基础参数JSON', '配置JSON'],
+  l1Json: ['l1Json', 'L1用户市场JSON', 'L1 用户市场JSON'],
+  l2Json: ['l2Json', 'L2竞品档案JSON', 'L2 竞品档案JSON'],
+  l3Json: ['l3Json', 'L3场景对标JSON', 'L3 场景对标JSON'],
+  l4Json: ['l4Json', 'L4设计借鉴JSON', 'L4 设计借鉴JSON'],
+  l5Json: ['l5Json', 'L5测评追溯JSON', 'L5 测评追溯JSON'],
+  displayNote: ['displayNote', '网站显示备注', '读取备注'],
   pointId: ['pointId', '对标点ID'],
   category: ['category', '类别', '对标类型'],
   title: ['title', '标题'],
@@ -207,7 +239,7 @@ export function vehicleFieldsToEntity(record, grouped = {}) {
     completeness: numberFromField(fieldValue(fields, 'completeness'), 0),
     updatedAt: dateFromField(fieldValue(fields, 'updatedAt')),
     isKeyModel: boolFromField(fieldValue(fields, 'isKeyModel')),
-    spec: grouped.spec || {},
+    spec: normalizeSpec(Object.keys(grouped.spec || {}).length ? grouped.spec : jsonFromField(fieldValue(fields, 'specJson'), {})),
     coreHighlights: arrayFromField(fieldValue(fields, 'coreHighlights')),
     designFocus: arrayFromField(fieldValue(fields, 'designFocus')),
     benchmarkSuitability: arrayFromField(fieldValue(fields, 'benchmarkSuitability')),
