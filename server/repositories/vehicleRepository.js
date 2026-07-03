@@ -532,7 +532,7 @@ const buildL2Profile = (records, vehicleId) => {
     if (!label || label === vehicleId) return null;
 
     const valueParts = rowValuesExceptMeta(fields, label);
-    const value = readAny(fields, ['参数值', '内容', '值', '版本专属配置', '全系标配', '标准版', 'Pro版', 'Max版']) || valueParts.join('\n');
+    const value = readAny(fields, ['参数值', '内容', '值']) || valueParts.join('\n');
     if (!value) return null;
 
     return {
