@@ -171,3 +171,23 @@ export async function updateRecord(tableId, recordId, fields) {
 export async function deleteRecord(tableId, recordId) {
   await feishuFetch(await recordsPath(tableId, recordId), { method: 'DELETE' }, `Delete record ${recordId}`);
 }
+
+export async function downloadMedia(fileToken) {
+  const token = await getTenantAccessToken();
+  const response = await fetch(`${FEISHU_BASE_URL}/drive/v1/medias/${encodeURIComponent(fileToken)}/download`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Download media ${fileToken} failed: HTTP ${response.status} ${text}`);
+  }
+
+  return {
+    contentType: response.headers.get('content-type') || 'application/octet-stream',
+    buffer: Buffer.from(await response.arrayBuffer()),
+  };
+}

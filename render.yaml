@@ -22,6 +22,20 @@ services:
         sync: false
       - key: VEHICLE_TABLE_ID
         sync: false
+      - key: L1_MARKET_TABLE_ID
+        sync: false
+      - key: L2_PROFILE_TABLE_ID
+        sync: false
+      - key: L3_SCENE_TABLE_ID
+        sync: false
+      - key: L3_FEATURE_TABLE_ID
+        sync: false
+      - key: L3_STYLING_TABLE_ID
+        sync: false
+      - key: L4_DESIGN_TABLE_ID
+        sync: false
+      - key: L5_TRACE_TABLE_ID
+        sync: false
       - key: SPECS_TABLE_ID
         sync: false
       - key: BENCHMARK_TABLE_ID

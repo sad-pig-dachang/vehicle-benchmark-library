@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireFeishuConfig } from '../config.js';
-import { getTenantAccessToken } from '../feishuClient.js';
+import { downloadMedia, getTenantAccessToken } from '../feishuClient.js';
 import { vehicleRepository } from '../repositories/vehicleRepository.js';
 
 export const apiRouter = Router();
@@ -26,6 +26,16 @@ apiRouter.get(
     requireFeishuConfig();
     await getTenantAccessToken();
     res.json({ ok: true });
+  }),
+);
+
+apiRouter.get(
+  '/feishu/media/:fileToken',
+  asyncHandler(async (req, res) => {
+    const media = await downloadMedia(req.params.fileToken);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.type(media.contentType);
+    res.send(media.buffer);
   }),
 );
 

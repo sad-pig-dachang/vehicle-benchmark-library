@@ -1,5 +1,5 @@
-const fallbackImage =
-  'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1600&q=80';
+const mediaUrlFromToken = (fileToken) =>
+  fileToken ? `/api/feishu/media/${encodeURIComponent(fileToken)}` : '';
 
 const arrayFromField = (value) => {
   if (Array.isArray(value)) {
@@ -8,6 +8,9 @@ const arrayFromField = (value) => {
         if (typeof item === 'string') return item;
         if (item?.text) return item.text;
         if (item?.name) return item.name;
+        if (item?.url) return item.url;
+        if (item?.tmp_url) return item.tmp_url;
+        if (item?.link) return item.link;
         return String(item);
       })
       .filter(Boolean);
@@ -37,13 +40,31 @@ const boolFromField = (value) => {
 
 const textFromField = (value, fallback = '') => {
   if (Array.isArray(value)) {
-    return value.map((item) => item?.text || item?.name || String(item)).join('');
+    return value.map((item) => item?.url || item?.tmp_url || item?.link || item?.text || item?.name || String(item)).join('');
   }
   if (typeof value === 'object' && value !== null) {
-    return value.link || value.text || value.name || JSON.stringify(value);
+    return value.url || value.tmp_url || value.link || value.text || value.name || JSON.stringify(value);
   }
   if (value === undefined || value === null) return fallback;
   return String(value);
+};
+
+const urlFromField = (value, fallback = '') => {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = urlFromField(item, '');
+      if (url) return url;
+    }
+    return fallback;
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    return value.url || value.tmp_url || value.link || mediaUrlFromToken(value.file_token) || fallback;
+  }
+
+  const raw = textFromField(value, '').trim();
+  if (/^(https?:|data:image\/|\/)/.test(raw)) return raw;
+  return fallback;
 };
 
 const dateFromField = (value, fallback = '') => {
@@ -96,7 +117,7 @@ const normalizeSpec = (spec = {}) => {
 };
 
 export const fieldAliases = {
-  vehicleId: ['vehicleId', '车型ID', '车型编号', '车辆ID'],
+  vehicleId: ['vehicleId', '竞品库ID', '车型ID', '车型编号', '车辆ID'],
   brand: ['brand', '品牌'],
   model: ['model', '车型', '车型名称'],
   year: ['year', '年款'],
@@ -106,14 +127,14 @@ export const fieldAliases = {
   energy: ['energy', '能源形式', '能源'],
   priceMin: ['priceMin', '最低价格', '价格下限', '价格区间最低', '价格下限（万元）', '价格下限(万元)'],
   priceMax: ['priceMax', '最高价格', '价格上限', '价格区间最高', '价格上限（万元）', '价格上限(万元)'],
-  coverImageUrl: ['coverImageUrl', '封面图链接', '封面图URL'],
+  coverImageUrl: ['coverImageUrl', '封面图', '封面图链接', '封面图URL'],
   coverImageTitle: ['coverImageTitle', '封面图标题'],
   coverImageAlt: ['coverImageAlt', '封面图说明'],
   coverImageSource: ['coverImageSource', '封面图来源'],
   productPositioning: ['productPositioning', '产品定位'],
   targetUsers: ['targetUsers', '目标用户'],
-  summary: ['summary', '车型一句话总结', '一句话总结', '总结'],
-  keyTags: ['keyTags', '关键标签'],
+  summary: ['summary', '车型总结', '车型一句话总结', '一句话总结', '总结'],
+  keyTags: ['keyTags', '车型标签/关键词', '关键标签'],
   scenarioTags: ['scenarioTags', '使用场景标签', '场景标签'],
   hmiTags: ['hmiTags', 'HMI标签', 'HMI 标签'],
   stylingTags: ['stylingTags', '内外饰标签', '造型标签'],
@@ -197,10 +218,15 @@ const benchmarkCategoryFromField = (value) => {
 export function vehicleFieldsToEntity(record, grouped = {}) {
   const fields = record.fields || {};
   const vehicleId = textFromField(fieldValue(fields, 'vehicleId'), record.record_id);
+  const priceRange = textFromField(fields['指导价'] || fields['价格区间'] || '');
+  const priceNumbers = priceRange.match(/\d+(\.\d+)?/g)?.map(Number) || [];
+  const rawLevel = textFromField(fieldValue(fields, 'level'), 'SUV');
+  const rawEnergy = textFromField(fieldValue(fields, 'energy'), '');
+  const inferredEnergy = rawEnergy || (rawLevel.includes('纯电') ? '纯电' : rawLevel.includes('增程') ? '增程' : rawLevel.includes('插混') ? '插混' : '纯电');
   const coverImage = {
     id: `${vehicleId}-cover`,
     type: 'image',
-    url: textFromField(fieldValue(fields, 'coverImageUrl'), fallbackImage),
+    url: urlFromField(fieldValue(fields, 'coverImageUrl')),
     title: textFromField(
       fieldValue(fields, 'coverImageTitle'),
       `${textFromField(fieldValue(fields, 'brand'))} ${textFromField(fieldValue(fields, 'model'))} 封面图`,
@@ -223,10 +249,10 @@ export function vehicleFieldsToEntity(record, grouped = {}) {
     year: textFromField(fieldValue(fields, 'year')),
     market: textFromField(fieldValue(fields, 'market'), '国内'),
     countryRegion: textFromField(fieldValue(fields, 'countryRegion')),
-    level: textFromField(fieldValue(fields, 'level'), 'SUV'),
-    energy: textFromField(fieldValue(fields, 'energy'), '纯电'),
-    priceMin: numberFromField(fieldValue(fields, 'priceMin')),
-    priceMax: numberFromField(fieldValue(fields, 'priceMax')),
+    level: rawLevel,
+    energy: inferredEnergy,
+    priceMin: numberFromField(fieldValue(fields, 'priceMin'), priceNumbers[0] || 0),
+    priceMax: numberFromField(fieldValue(fields, 'priceMax'), priceNumbers[1] || priceNumbers[0] || 0),
     coverImage,
     productPositioning: textFromField(fieldValue(fields, 'productPositioning')),
     targetUsers: textFromField(fieldValue(fields, 'targetUsers')),
@@ -235,7 +261,7 @@ export function vehicleFieldsToEntity(record, grouped = {}) {
     scenarioTags: arrayFromField(fieldValue(fields, 'scenarioTags')),
     hmiTags: arrayFromField(fieldValue(fields, 'hmiTags')),
     stylingTags: arrayFromField(fieldValue(fields, 'stylingTags')),
-    status: textFromField(fieldValue(fields, 'status'), '待补充'),
+    status: textFromField(fieldValue(fields, 'status')),
     completeness: numberFromField(fieldValue(fields, 'completeness'), 0),
     updatedAt: dateFromField(fieldValue(fields, 'updatedAt')),
     isKeyModel: boolFromField(fieldValue(fields, 'isKeyModel')),
@@ -249,6 +275,7 @@ export function vehicleFieldsToEntity(record, grouped = {}) {
     interiorPoints,
     links: grouped.discussions || [],
     versionLogs: grouped.versionLogs || [],
+    profile: grouped.profile,
   };
 }
 

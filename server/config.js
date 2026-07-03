@@ -18,6 +18,13 @@ export const config = {
       media: env.MEDIA_TABLE_ID || '',
       discussion: env.DISCUSSION_TABLE_ID || env.FEISHU_DISCUSSION_TABLE_ID || '',
       version: env.VERSION_TABLE_ID || env.FEISHU_VERSION_LOG_TABLE_ID || '',
+      l1Market: env.L1_MARKET_TABLE_ID || '',
+      l2Profile: env.L2_PROFILE_TABLE_ID || '',
+      l3Scenes: env.L3_SCENE_TABLE_ID || '',
+      l3Features: env.L3_FEATURE_TABLE_ID || '',
+      l3Styling: env.L3_STYLING_TABLE_ID || '',
+      l4Design: env.L4_DESIGN_TABLE_ID || '',
+      l5Trace: env.L5_TRACE_TABLE_ID || '',
     },
   },
 };

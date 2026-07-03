@@ -75,8 +75,104 @@ export interface VersionLog {
   designImpact: string;
 }
 
+export interface ProfileKeyValue {
+  label: string;
+  value: string;
+}
+
+export interface ProfileUserPoint {
+  keyword: string;
+  description: string;
+}
+
+export interface ProfileSpecRow {
+  label: string;
+  value: string;
+  description?: string;
+}
+
+export interface ProfileSceneNeed {
+  need: string;
+  note?: string;
+  hardware: string;
+  software: string;
+  judgement: string;
+}
+
+export interface ProfileScene {
+  id: string;
+  title: string;
+  source: string;
+  image?: MediaAsset;
+  needs: ProfileSceneNeed[];
+}
+
+export interface ProfileFeature {
+  id: string;
+  title: string;
+  feature: string;
+  judgement: string;
+  benchmarkValue: string;
+  image?: MediaAsset;
+}
+
+export interface ProfileOpportunity {
+  id: string;
+  title: string;
+  type: string;
+  priority: string;
+  source: string;
+  direction: string;
+  description: string;
+  designValue: string;
+}
+
+export interface ProfileDesignReference {
+  id: string;
+  group: string;
+  title: string;
+  description: string;
+  image?: MediaAsset;
+  url?: string;
+}
+
+export interface ProfileScoreRow {
+  dimension: string;
+  maxScore: string;
+  score: string;
+  reason: string;
+}
+
+export interface VehicleProfileData {
+  benchmarkLevel?: string;
+  l1?: {
+    targetUsers: ProfileUserPoint[];
+    marketPoints: ProfileUserPoint[];
+    tags: string[];
+  };
+  l2?: {
+    basicItems: ProfileKeyValue[];
+    configItems: ProfileSpecRow[];
+    specRows: ProfileSpecRow[];
+  };
+  l3Scenes?: ProfileScene[];
+  l3Features?: ProfileFeature[];
+  l3Styling?: ProfileOpportunity[];
+  l4Design?: {
+    heroImages: MediaAsset[];
+    references: ProfileDesignReference[];
+  };
+  l5?: {
+    totalScore: string;
+    score: string;
+    summary: string;
+    rows: ProfileScoreRow[];
+  };
+}
+
 export interface Vehicle {
   id: string;
+  recordId?: string;
   brand: string;
   model: string;
   year: string;
@@ -108,4 +204,5 @@ export interface Vehicle {
   interiorPoints: BenchmarkPoint[];
   links: DiscussionLink[];
   versionLogs: VersionLog[];
+  profile?: VehicleProfileData;
 }

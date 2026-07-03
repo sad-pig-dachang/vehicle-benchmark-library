@@ -18,26 +18,26 @@ const tables = config.feishu.tables;
 let cachedTableNameMap = null;
 
 const tableNameCandidates = {
-  vehicle: ['档案基础信息1', '档案基础信息', 'Vehicle', '车型主表', '车辆主表'],
+  vehicle: ['档案基础信息', '档案基础信息1', 'Vehicle', '车型主表', '车辆主表'],
   specs: ['Specs', '参数表', '基础参数表'],
   benchmark: ['Benchmark', '对标点表', 'Benchmark 表'],
   discussion: ['Discussion', '资料链接表', '讨论链接表'],
   version: ['Version', '迭代记录表', 'Version 表'],
-  l1Market: ['L1-用户市场层1', 'L1-用户市场层'],
-  l2Profile: ['L2-竞品档案层1', 'L2-竞品档案层'],
-  l3Scenes: ['L3-场景对标分析层1', 'L3-场景对标分析层'],
-  l3Features: ['L3-具体功能亮点1', 'L3-具体功能亮点'],
-  l3Styling: ['L3-造型机会点1', 'L3-造型机会点'],
-  l4Design: ['L4-设计对标层1', 'L4-设计对标层'],
-  l5Trace: ['L5-测评与追溯层1', 'L5-测评与追溯层'],
+  l1Market: ['L1-用户市场层', 'L1-用户市场层1'],
+  l2Profile: ['L2-竞品档案层', 'L2-竞品档案层1'],
+  l3Scenes: ['L3-场景对标分析层', 'L3-场景对标分析层1'],
+  l3Features: ['L3-具体功能亮点', 'L3-具体功能亮点1'],
+  l3Styling: ['L3-造型机会点', 'L3-造型机会点1'],
+  l4Design: ['L4-设计对标层', 'L4-设计对标层1'],
+  l5Trace: ['L5-测评与追溯层', 'L5-测评与追溯层1'],
 };
 
 const readFieldText = (value, fallback = '') => {
   if (Array.isArray(value)) {
-    return value.map((item) => item?.text || item?.name || String(item)).join('');
+    return value.map((item) => item?.text || item?.name || item?.url || item?.tmp_url || item?.link || String(item)).join('');
   }
   if (typeof value === 'object' && value !== null) {
-    return value.link || value.text || value.name || JSON.stringify(value);
+    return value.text || value.name || value.url || value.tmp_url || value.link || JSON.stringify(value);
   }
   if (value === undefined || value === null) return fallback;
   return String(value);
@@ -78,6 +78,182 @@ const mediaFromUrl = (vehicleId, id, url, title) =>
         source: 'Feishu',
       }
     : undefined;
+
+const mediaUrlFromToken = (fileToken) =>
+  fileToken ? `/api/feishu/media/${encodeURIComponent(fileToken)}` : '';
+
+const metadataFields = new Set([
+  '品牌',
+  '车型',
+  '车型ID',
+  'vehicleId',
+  '父记录',
+  '记录',
+  '关联记录',
+  '关联车型',
+]);
+
+const fieldValueByNames = (fields, names) => {
+  for (const name of names) {
+    if (Object.prototype.hasOwnProperty.call(fields, name)) {
+      return fields[name];
+    }
+  }
+  return undefined;
+};
+
+const extractUrl = (value) => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = extractUrl(item);
+      if (url) return url;
+    }
+    return '';
+  }
+  if (typeof value === 'object') {
+    return value.url || value.tmp_url || value.link || mediaUrlFromToken(value.file_token) || '';
+  }
+  const text = String(value);
+  return text.match(/https?:\/\/[^\s，,]+/)?.[0] || '';
+};
+
+const mediaFromFields = (fields, names, vehicleId, id, title) => {
+  const raw = fieldValueByNames(fields, names);
+  const url = extractUrl(raw);
+  return mediaFromUrl(vehicleId, id, url, title);
+};
+
+const mediaListFromFields = (fields, names, vehicleId, idPrefix, title) => {
+  const raw = fieldValueByNames(fields, names);
+  const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  return values
+    .map((item, index) => mediaFromUrl(vehicleId, `${idPrefix}-${index + 1}`, extractUrl(item), title))
+    .filter(Boolean);
+};
+
+const normalizeText = (value) => readFieldText(value).trim();
+
+const readVehicleKey = (fields, knownVehicleId = '') => {
+  const id = readAny(fields, ['竞品库ID', '竞品ID', '车型ID', 'vehicleId']);
+  const hasVehicleIdentity = Boolean(readAny(fields, ['品牌']) || readAny(fields, ['车型']));
+  if (hasVehicleIdentity) return id;
+  if (knownVehicleId && id === knownVehicleId) return id;
+  return '';
+};
+
+const parentFieldNames = ['父记录', '关联记录', '关联车型', '所属车型'];
+const looseParentFieldNames = [...parentFieldNames, '记录'];
+
+const tokensFromField = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(tokensFromField);
+  if (typeof value === 'object') {
+    return [
+      ...(Array.isArray(value.record_ids) ? value.record_ids : []),
+      ...(Array.isArray(value.records) ? value.records : []),
+      ...(Array.isArray(value.ids) ? value.ids : []),
+      value.record_id,
+      value.recordId,
+      value.id,
+      value.text,
+      value.name,
+      value.link_record_id,
+    ].filter(Boolean).map(String);
+  }
+  return [String(value)];
+};
+
+const parentTokens = (fields, names = looseParentFieldNames) =>
+  tokensFromField(fieldValueByNames(fields, names)).map((item) => item.trim()).filter(Boolean);
+
+const hasStrictParentField = (fields) => parentTokens(fields, parentFieldNames).length > 0;
+
+const matchesParent = (fields, vehicleId, parentRecordIds = new Set()) =>
+  parentTokens(fields).some((token) => token === vehicleId || parentRecordIds.has(token));
+
+const isVehicleParentRow = (fields, vehicleId) => {
+  const canonicalId = readAny(fields, ['竞品库ID', '车型ID', 'vehicleId']);
+  if (canonicalId === vehicleId) return true;
+  return readVehicleKey(fields, vehicleId) === vehicleId && Boolean(readAny(fields, ['品牌']) || readAny(fields, ['车型']));
+};
+
+const firstNonEmptyField = (fields, names) => readAny(fields, names, '').trim();
+
+const compactItems = (items) => items.filter((item) => item && item.value && item.value !== '[]' && item.value !== '{}');
+
+const keyValueItems = (fields, names) =>
+  compactItems(names.map((name) => ({ label: name, value: readAny(fields, [name]) })));
+
+const textPreview = (text, fallback = '') => {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  return clean ? clean.slice(0, 26) : fallback;
+};
+
+const childRowsBySequence = (records, vehicleId, buildChild) => {
+  const rows = [];
+  let activeVehicleId = '';
+  const parentRecordIds = new Set(
+    records
+      .filter((record) => isVehicleParentRow(record.fields || {}, vehicleId))
+      .map((record) => record.record_id),
+  );
+
+  for (const record of records) {
+    const fields = record.fields || {};
+
+    if (isVehicleParentRow(fields, vehicleId)) {
+      activeVehicleId = vehicleId;
+      continue;
+    }
+
+    if (readVehicleKey(fields) && readVehicleKey(fields) !== vehicleId) {
+      activeVehicleId = '';
+    }
+
+    const isCurrentChild = matchesParent(fields, vehicleId, parentRecordIds) || (!hasStrictParentField(fields) && activeVehicleId === vehicleId);
+    if (!isCurrentChild) continue;
+
+    const item = buildChild(record, fields);
+    if (item) rows.push(item);
+  }
+
+  return rows;
+};
+
+const readScoreField = (fields, model = '') => {
+  const explicit = readAny(fields, [`${model}得分`, `${model} 得分`, '车型得分', '总分', '得分', '小米YU7得分', '小米 YU7 得分']);
+  if (explicit) return explicit;
+
+  const scoreEntry = Object.entries(fields).find(([key, value]) => key.endsWith('得分') && key !== '满分' && normalizeText(value));
+  return scoreEntry ? readFieldText(scoreEntry[1]) : '';
+};
+
+const pairedUserPoints = (fields, prefixes, max = 6) => {
+  const points = [];
+
+  for (let index = 1; index <= max; index += 1) {
+    const keyword = readAny(fields, prefixes.flatMap((prefix) => [
+      `${prefix}${index}关键词`,
+      `${prefix}${index}关键字`,
+      `${prefix}${index}`,
+    ]));
+    const description = readAny(fields, prefixes.flatMap((prefix) => [
+      `${prefix}${index}描述`,
+      `${prefix}${index}说明`,
+      `${prefix}${index}详述`,
+    ]));
+
+    if (keyword || description) {
+      points.push({
+        keyword: keyword || `条目 ${index}`,
+        description,
+      });
+    }
+  }
+
+  return points;
+};
 
 async function tableNameMap() {
   if (cachedTableNameMap) return cachedTableNameMap;
@@ -281,7 +457,7 @@ const traceRecordToDiscussion = (record) => {
     platform: readAny(fields, ['平台/维度', '平台'], type || '资料'),
     title,
     url,
-    heat: readAny(fields, ['热度'], '待补充'),
+    heat: readAny(fields, ['热度']),
     summary: readAny(fields, ['观点摘要/评分依据', '观点摘要', '摘要']),
     sentiment: readAny(fields, ['情绪倾向'], '中性'),
     referenceValue: readAny(fields, ['引用价值/设计影响', '引用价值']),
@@ -297,17 +473,290 @@ const traceRecordToVersionLog = (record) => {
     recordId: record.record_id,
     id: readAny(fields, ['迭代记录ID', '记录ID'], record.record_id),
     vehicleId: readAny(fields, ['车型ID', 'vehicleId']),
-    yearModel: readAny(fields, ['平台/维度', '年款/改款时间'], '待补充'),
-    changeTime: readAny(fields, ['标题/评测维度', '变化时间'], '待补充'),
+    yearModel: readAny(fields, ['平台/维度', '年款/改款时间']),
+    changeTime: readAny(fields, ['标题/评测维度', '变化时间']),
     changeTypes: readList(fields, ['标题/评测维度', '变化类型']),
     description: readAny(fields, ['观点摘要/评分依据', '变化描述']),
     designImpact: readAny(fields, ['引用价值/设计影响', '设计对标影响']),
   };
 };
 
+const buildL1Profile = (records, vehicleId) => {
+  const record = records.find((item) => readVehicleKey(item.fields || {}, vehicleId) === vehicleId);
+  const fields = record?.fields || {};
+  const targetUsers = pairedUserPoints(fields, ['核心目标用户', '目标用户']);
+  let marketPoints = pairedUserPoints(fields, ['核心市场卖点', '市场卖点', '定位标签', '卖点']);
+
+  if (!marketPoints.length) {
+    marketPoints = Object.entries(fields)
+      .filter(([key, value]) => /卖点|定位/.test(key) && !/标签\/关键词|建议对标层级/.test(key) && normalizeText(value))
+      .slice(0, 4)
+      .map(([key, value]) => ({ keyword: key, description: readFieldText(value) }));
+  }
+
+  return {
+    targetUsers,
+    marketPoints,
+    tags: readList(fields, ['市场定位标签', '定位标签', '车型标签/关键词', '关键标签']),
+  };
+};
+
+const l2ItemLabel = (fields) =>
+  firstNonEmptyField(fields, ['参数项', '配置项', '项目', '维度', '竞品ID', '竞品库ID']);
+
+const rowValuesExceptMeta = (fields, label) =>
+  Object.entries(fields)
+    .filter(([key, value]) => !metadataFields.has(key) && key !== '竞品库ID' && key !== '竞品ID' && key !== label && normalizeText(value))
+    .map(([key, value]) => `${key}：${readFieldText(value)}`);
+
+const buildL2Profile = (records, vehicleId) => {
+  const parent = records.find((item) => isVehicleParentRow(item.fields || {}, vehicleId));
+  const parentFields = parent?.fields || {};
+  const basicItems = keyValueItems(parentFields, [
+    '生产平台',
+    '车型平台',
+    '上市时间',
+    '官方指导价',
+    '指导价',
+    '能源类型',
+    '能源形式',
+    '车身结构',
+    '对标车型',
+    '全系标配',
+    '版本专属配置',
+    '核心配置',
+  ]);
+
+  const configItems = childRowsBySequence(records, vehicleId, (record, fields) => {
+    const label = l2ItemLabel(fields);
+    if (!label || label === vehicleId) return null;
+
+    const valueParts = rowValuesExceptMeta(fields, label);
+    const value = readAny(fields, ['参数值', '内容', '值', '版本专属配置', '全系标配', '标准版', 'Pro版', 'Max版']) || valueParts.join('\n');
+    if (!value) return null;
+
+    return {
+      id: record.record_id,
+      label,
+      value,
+      description: valueParts.filter((item) => !item.startsWith('参数值：') && !item.startsWith('内容：')).join('\n'),
+    };
+  });
+
+  return {
+    basicItems,
+    configItems,
+    specRows: configItems,
+  };
+};
+
+const specFromL2Profile = (profile = {}) => {
+  const spec = {};
+  const rows = profile.specRows || [];
+
+  for (const row of rows) {
+    const key = `${row.label} ${row.value}`;
+    const value = row.value;
+
+    if (/长宽高|车身尺寸|尺寸/.test(key)) {
+      const numbers = value.match(/\d+(\.\d+)?/g)?.map(Number) || [];
+      spec.lengthMm = numbers[0];
+      spec.widthMm = numbers[1];
+      spec.heightMm = numbers[2];
+    } else if (/轴距/.test(key)) {
+      spec.wheelbaseMm = readNumber({ value }, ['value']);
+    } else if (/座位|座椅|座数/.test(key)) {
+      spec.seats = value;
+    } else if (/驱动/.test(key)) {
+      spec.drivetrain = value;
+    } else if (/电池/.test(key)) {
+      spec.batteryKwh = value;
+    } else if (/CLTC|续航/.test(key)) {
+      spec.cltcRangeKm = value;
+    } else if (/座舱|芯片/.test(key)) {
+      spec.cockpitChip = value;
+    } else if (/屏幕|屏/.test(key)) {
+      spec.screenLayout = value;
+    } else if (/辅助驾驶|智驾|智能驾驶/.test(key)) {
+      spec.assistDriving = value;
+    } else if (/功率|动力/.test(key)) {
+      spec.engineOrMotor = value;
+    } else if (/零百|加速/.test(key)) {
+      spec.acceleration0100 = value;
+    }
+  }
+
+  return spec;
+};
+
+const buildL3Scenes = (records, vehicleId) => {
+  const scenes = [];
+  let currentScene = null;
+  let activeVehicleId = '';
+  const parentRecordIds = new Set(
+    records
+      .filter((record) => isVehicleParentRow(record.fields || {}, vehicleId))
+      .map((record) => record.record_id),
+  );
+
+  for (const record of records) {
+    const fields = record.fields || {};
+
+    if (isVehicleParentRow(fields, vehicleId)) {
+      activeVehicleId = vehicleId;
+    } else if (readVehicleKey(fields) && readVehicleKey(fields) !== vehicleId) {
+      activeVehicleId = '';
+      currentScene = null;
+    }
+
+    const isActive =
+      matchesParent(fields, vehicleId, parentRecordIds) ||
+      (!hasStrictParentField(fields) && activeVehicleId === vehicleId) ||
+      readVehicleKey(fields, vehicleId) === vehicleId;
+    if (!isActive) continue;
+
+    const sceneTitle = readAny(fields, ['场景名称', '场景标题']);
+    if (sceneTitle) {
+      currentScene = {
+        id: record.record_id,
+        title: sceneTitle,
+        source: readAny(fields, ['场景来源', '来源']),
+        image: mediaFromFields(fields, ['场景图片', '图片', '场景图'], vehicleId, record.record_id, sceneTitle),
+        needs: [],
+      };
+      scenes.push(currentScene);
+      continue;
+    }
+
+    const need = readAny(fields, ['行为需求', '用户需求']);
+    if (need && currentScene) {
+      currentScene.needs.push({
+        need,
+        note: readAny(fields, ['行为需求备注', '需求备注']),
+        hardware: readAny(fields, ['YU7 已有硬件支撑', 'YU7已有硬件支撑', '已有硬件支撑', '硬件支撑']),
+        software: readAny(fields, ['YU7 已有软件/HMI 支撑', 'YU7已有软件/HMI支撑', 'YU7已有软件HMI支撑', '软件/HMI支撑', '软件HMI支撑']),
+        judgement: readAny(fields, ['竞品判断', '现有体验判断', '判断']),
+      });
+    }
+  }
+
+  return scenes;
+};
+
+const buildL3Features = (records, vehicleId) =>
+  childRowsBySequence(records, vehicleId, (record, fields) => {
+    const title = readAny(fields, ['亮点标题', '亮点名称', '功能亮点']);
+    const feature = readAny(fields, ['具体功能点', '功能点', '功能描述']);
+    const judgement = readAny(fields, ['亮点判断', '判断']);
+    const benchmarkValue = readAny(fields, ['对标价值', '可借鉴点']);
+    if (!title && !feature && !judgement) return null;
+
+    return {
+      id: record.record_id,
+      title: title || textPreview(feature),
+      feature,
+      judgement,
+      benchmarkValue,
+      image: mediaFromFields(fields, ['亮点图片', '图片', '功能图片'], vehicleId, record.record_id, title || feature),
+    };
+  });
+
+const buildL3Styling = (records, vehicleId) =>
+  childRowsBySequence(records, vehicleId, (record, fields) => {
+    const title = readAny(fields, ['机会标题', '标题', '造型机会']);
+    const description = readAny(fields, ['功能描述', '机会描述', '描述']);
+    if (!title && !description) return null;
+
+    return {
+      id: record.record_id,
+      title: title || textPreview(description),
+      type: readAny(fields, ['机会类型', '类型']),
+      priority: readAny(fields, ['优先级']),
+      source: readAny(fields, ['来源线索', '来源']),
+      direction: readAny(fields, ['可做方向', '方向']),
+      description,
+      designValue: readAny(fields, ['设计价值', '价值']),
+    };
+  });
+
+const buildL4Design = (records, vehicleId) => {
+  const heroImages = [];
+  const references = [];
+  let activeVehicleId = '';
+  let activeGroup = '';
+  const parentRecordIds = new Set(
+    records
+      .filter((record) => isVehicleParentRow(record.fields || {}, vehicleId))
+      .map((record) => record.record_id),
+  );
+
+  for (const record of records) {
+    const fields = record.fields || {};
+
+    if (isVehicleParentRow(fields, vehicleId)) {
+      activeVehicleId = vehicleId;
+      heroImages.push(...mediaListFromFields(fields, ['核心视觉效果参考', '核心视觉效果参考图', '主图'], vehicleId, 'l4-hero', '核心视觉效果参考'));
+      continue;
+    }
+
+    if (readVehicleKey(fields) && readVehicleKey(fields) !== vehicleId) {
+      activeVehicleId = '';
+      activeGroup = '';
+    }
+
+    const isActive = matchesParent(fields, vehicleId, parentRecordIds) || (!hasStrictParentField(fields) && activeVehicleId === vehicleId);
+    if (!isActive) continue;
+
+    const description = readAny(fields, ['对应亮点描述', '对照亮点描述', '亮点描述', '设计看点', '描述']);
+    const image = mediaFromFields(fields, ['核心视觉效果参考', '核心视觉效果参考图', '图片', '参考图'], vehicleId, record.record_id, description || activeGroup);
+    const firstCell = firstNonEmptyField(fields, ['竞品库ID', '竞品ID', '分组', '分类', '亮点类型']);
+    if (/外观|外饰|内饰|CMF|HMI|智驾/.test(firstCell) && !description && !image) {
+      activeGroup = firstCell;
+      continue;
+    }
+
+    if (!description && !image) continue;
+
+    references.push({
+      id: record.record_id,
+      group: readAny(fields, ['分组', '分类', '亮点类型']) || activeGroup || firstCell,
+      title: readAny(fields, ['标题', '对标标题']) || textPreview(description, firstCell || activeGroup),
+      description,
+      image,
+      url: readAny(fields, ['可跳转链接', '链接', 'URL']),
+    });
+  }
+
+  return { heroImages, references };
+};
+
+const buildL5Profile = (records, vehicleId, model = '') => {
+  const parent = records.find((record) => isVehicleParentRow(record.fields || {}, vehicleId));
+  const parentFields = parent?.fields || {};
+  const rows = childRowsBySequence(records, vehicleId, (record, fields) => {
+    const dimension = readAny(fields, ['评测维度', '标题/评测维度', '维度', '竞品库ID', '竞品ID']);
+    if (!dimension || dimension === vehicleId) return null;
+
+    return {
+      dimension,
+      maxScore: readAny(fields, ['满分']),
+      score: readScoreField(fields, model),
+      reason: readAny(fields, ['评分依据']),
+    };
+  });
+
+  return {
+    totalScore: readAny(parentFields, ['满分']) || '100',
+    score: readScoreField(parentFields, model),
+    summary: readAny(parentFields, ['评分依据']),
+    rows,
+  };
+};
+
 async function listJoinedData() {
   const [
     vehicleRecords,
+    l1MarketRecords,
     specRecords,
     benchmarkRecords,
     discussionRecords,
@@ -320,6 +769,7 @@ async function listJoinedData() {
     l5TraceRecords,
   ] = await Promise.all([
     listRecordsByKind('vehicle', { required: true }),
+    listRecordsByKind('l1Market'),
     listRecordsByKind('specs'),
     listRecordsByKind('benchmark'),
     listRecordsByKind('discussion'),
@@ -351,13 +801,31 @@ async function listJoinedData() {
 
   return vehicleRecords.map((record) => {
     const vehicleId = readFieldText(fieldValue(record.fields || {}, 'vehicleId'), record.record_id);
-    const childSpec = specs.find((item) => item.vehicleId === vehicleId)?.spec || l2RowsToSpec(l2Records, vehicleId);
+    const vehicleModel = readAny(record.fields || {}, ['车型', 'model']);
+    const l1Profile = buildL1Profile(l1MarketRecords, vehicleId);
+    const l2Profile = buildL2Profile(l2Records, vehicleId);
+    const l5Profile = buildL5Profile(l5TraceRecords, vehicleId, vehicleModel);
+    const childSpec =
+      specs.find((item) => item.vehicleId === vehicleId)?.spec ||
+      specFromL2Profile(l2Profile) ||
+      l2RowsToSpec(l2Records, vehicleId);
+    const profile = {
+      benchmarkLevel: readAny(record.fields || {}, ['建议对标层级']),
+      l1: l1Profile,
+      l2: l2Profile,
+      l3Scenes: buildL3Scenes(l3SceneRecords, vehicleId),
+      l3Features: buildL3Features(l3FeatureRecords, vehicleId),
+      l3Styling: buildL3Styling(l3StylingRecords, vehicleId),
+      l4Design: buildL4Design(l4DesignRecords, vehicleId),
+      l5: l5Profile,
+    };
 
     return vehicleFieldsToEntity(record, {
       spec: childSpec,
       benchmarkPoints: byVehicleId(benchmarkPoints, vehicleId),
       discussions: byVehicleId(discussions, vehicleId),
       versionLogs: byVehicleId(versionLogs, vehicleId),
+      profile,
     });
   });
 }
