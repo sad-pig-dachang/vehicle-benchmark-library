@@ -736,17 +736,15 @@ export function VehicleProfile({
   const [activeCardIndex, setActiveCardIndex] = useState<Record<string, number>>({});
   const profile = vehicle.profile;
   const useYu7Fallback = isYu7Vehicle(vehicle);
-  const preferDesignValues = useYu7Fallback && !vehicle.recordId;
+  const useYu7DemoFallback = useYu7Fallback && !vehicle.recordId;
   const officialName = officialNameOf(vehicle);
-  const displayPrice = preferDesignValues
+  const displayPrice = useYu7DemoFallback
     ? '25.35 - 42.99 万'
     : valueFromItems(profile?.l2?.basicItems || [], ['官方指导价', '指导价']) || priceText(vehicle);
   const displayLevel = clean(vehicle.level);
   const rawVisibleVehicleId = visibleIdOf(vehicle, '');
-  const visibleVehicleId = preferDesignValues || (useYu7Fallback && rawVisibleVehicleId && !/^COM-/i.test(rawVisibleVehicleId))
-    ? yu7Fallback.vehicleId
-    : rawVisibleVehicleId;
-  const fallbackHeroImage = useYu7Fallback ? yu7Fallback.hero.url : '';
+  const visibleVehicleId = useYu7DemoFallback ? yu7Fallback.vehicleId : rawVisibleVehicleId || vehicle.recordId || vehicle.id;
+  const fallbackHeroImage = useYu7DemoFallback ? yu7Fallback.hero.url : '';
   const coverImage = assetUrl(vehicle.coverImage) || fallbackHeroImage;
   const heroStyle =
     coverImage
@@ -756,18 +754,18 @@ export function VehicleProfile({
             : `url(${coverImage})`,
         }
       : undefined;
-  const summary = preferDesignValues ? yu7Fallback.summary : clean(vehicle.summary) || (useYu7Fallback ? yu7Fallback.summary : '');
-  const benchmarkLevel = clean(profile?.benchmarkLevel) || (useYu7Fallback ? yu7Fallback.benchmarkLevel : '');
-  const tags = preferDesignValues
+  const summary = useYu7DemoFallback ? yu7Fallback.summary : clean(vehicle.summary);
+  const benchmarkLevel = clean(profile?.benchmarkLevel) || (useYu7DemoFallback ? yu7Fallback.benchmarkLevel : '');
+  const tags = useYu7DemoFallback
     ? yu7Fallback.tags
-    : unique([...(vehicle.keyTags || []), ...(profile?.l1?.tags || []), ...(useYu7Fallback ? yu7Fallback.tags : [])]).slice(0, 5);
+    : unique([...(vehicle.keyTags || []), ...(profile?.l1?.tags || [])]).slice(0, 5);
   const l1Targets = (profile?.l1?.targetUsers || []).filter((item) => hasValue(item.keyword) && hasValue(item.description));
   const marketPoints = (profile?.l1?.marketPoints || []).filter((item) => hasValue(item.keyword) && hasValue(item.description));
-  const displayTargets = useYu7Fallback && !l1Targets.length ? yu7Fallback.l1Targets : l1Targets;
-  const displayMarketPoints = useYu7Fallback && !marketPoints.length ? yu7Fallback.marketPoints : marketPoints;
+  const displayTargets = useYu7DemoFallback && !l1Targets.length ? yu7Fallback.l1Targets : l1Targets;
+  const displayMarketPoints = useYu7DemoFallback && !marketPoints.length ? yu7Fallback.marketPoints : marketPoints;
   const l2BasicItems = profile?.l2?.basicItems || [];
 
-  const baseRows = preferDesignValues
+  const baseRows = useYu7DemoFallback
     ? yu7Fallback.basicRows
     : preferRows(
         compactRows([
@@ -781,34 +779,34 @@ export function VehicleProfile({
           ['对标车型', valueFromItems(l2BasicItems, ['对标车型'])],
         ]),
         yu7Fallback.basicRows,
-        useYu7Fallback,
+        useYu7DemoFallback,
       );
 
   const specRows = useMemo(() => profile?.l2?.specRows || [], [profile?.l2?.specRows]);
   const parsedConfigRows = parseConfigMatrix(specRows);
-  const configRows = parsedConfigRows.length ? parsedConfigRows : useYu7Fallback ? yu7Fallback.configRows : [];
+  const configRows = parsedConfigRows.length ? parsedConfigRows : useYu7DemoFallback ? yu7Fallback.configRows : [];
   const parsedVersionRows = parseVersionMatrix(specRows);
-  const versionRows = parsedVersionRows.length ? parsedVersionRows : useYu7Fallback ? yu7Fallback.versionRows : [];
-  const scenes = mergeSceneImages((profile?.l3Scenes || []).filter((scene) => hasValue(scene.title)), yu7Fallback.scenes, useYu7Fallback);
+  const versionRows = parsedVersionRows.length ? parsedVersionRows : useYu7DemoFallback ? yu7Fallback.versionRows : [];
+  const scenes = mergeSceneImages((profile?.l3Scenes || []).filter((scene) => hasValue(scene.title)), yu7Fallback.scenes, useYu7DemoFallback);
   const features = (profile?.l3Features || []).filter((item) => hasValue(item.title) || hasValue(item.feature));
-  const displayFeatures = features.length ? features : useYu7Fallback ? yu7Fallback.features : [];
+  const displayFeatures = features.length ? features : useYu7DemoFallback ? yu7Fallback.features : [];
   const opportunities = (profile?.l3Styling || []).filter((item) => hasValue(item.title) || hasValue(item.description));
-  const displayOpportunities = opportunities.length ? opportunities : useYu7Fallback ? yu7Fallback.opportunities : [];
+  const displayOpportunities = opportunities.length ? opportunities : useYu7DemoFallback ? yu7Fallback.opportunities : [];
   const designReferences = (profile?.l4Design?.references || []).filter((item) => hasValue(item.description) || hasValue(item.image?.url));
   const profileDesignMedia = [
     ...(profile?.l4Design?.heroImages || []),
     ...designReferences.map((item) => item.image).filter(Boolean),
   ].filter((item): item is MediaAsset => Boolean(item?.url));
-  const designMedia = profileDesignMedia.length ? profileDesignMedia : useYu7Fallback ? yu7Fallback.designHero : [];
+  const designMedia = profileDesignMedia.length ? profileDesignMedia : useYu7DemoFallback ? yu7Fallback.designHero : [];
   const galleryCards: GalleryCard[] = designReferences.length
     ? designCardsFromReferences(designReferences)
-    : useYu7Fallback
+    : useYu7DemoFallback
       ? yu7Fallback.designCards
       : [];
   const rawScoreRows = (profile?.l5?.rows || []).filter((row: ProfileScoreRow) => hasValue(row.dimension));
-  const scoreRows = mergeScoreRows(rawScoreRows, yu7Fallback.scoreRows, useYu7Fallback);
-  const score = clean(profile?.l5?.score) || (useYu7Fallback ? yu7Fallback.score : '');
-  const totalScore = clean(profile?.l5?.totalScore) || (useYu7Fallback ? yu7Fallback.totalScore : '100');
+  const scoreRows = mergeScoreRows(rawScoreRows, yu7Fallback.scoreRows, useYu7DemoFallback);
+  const score = clean(profile?.l5?.score) || (useYu7DemoFallback ? yu7Fallback.score : '');
+  const totalScore = clean(profile?.l5?.totalScore) || (useYu7DemoFallback ? yu7Fallback.totalScore : '100');
   const scorePercent = score ? Math.min(100, Math.round((numberFromText(score) / Math.max(numberFromText(totalScore), 1)) * 100)) : 0;
   const hasL3 = scenes.length > 0 || displayFeatures.length > 0 || displayOpportunities.length > 0;
   const hasL4 = designMedia.length > 0 || galleryCards.length > 0;
@@ -967,7 +965,7 @@ export function VehicleProfile({
               <SectionHeader kicker="L3 BENCHMARK / EXPERIENCE" title="L3-场景对标分析层" intro="场景对标、功能亮点与机会清单" />
               {scenes.map((scene, index) => (
                 <SceneBlock
-                  fallbackImage={useYu7Fallback ? yu7Fallback.scenes[index]?.image : undefined}
+                  fallbackImage={useYu7DemoFallback ? yu7Fallback.scenes[index]?.image : undefined}
                   key={scene.id}
                   scene={scene}
                   index={index}
@@ -982,7 +980,7 @@ export function VehicleProfile({
               <div className="figma-card-grid">
                 {displayFeatures.map((item: ProfileFeature, index) => {
                   const image = assetUrl(item.image);
-                  const fallbackImage = useYu7Fallback ? assetUrl(yu7Fallback.features[index]?.image) : '';
+                  const fallbackImage = useYu7DemoFallback ? assetUrl(yu7Fallback.features[index]?.image) : '';
                   return (
                     <article className="figma-feature-card" key={item.id}>
                       {(image || fallbackImage) && <FigmaImage alt={item.title} src={image} fallbackSrc={fallbackImage} />}
@@ -1024,7 +1022,7 @@ export function VehicleProfile({
           <SectionHeader kicker="L4 DESIGN REFERENCE" title="L4-设计对标层" intro="沉淀外饰、内饰、CMF 与 HMI 设计语言" />
           <DesignCarousel
             activeIndex={activeDesignIndex}
-            fallbackMedia={useYu7Fallback ? yu7Fallback.designHero : []}
+            fallbackMedia={useYu7DemoFallback ? yu7Fallback.designHero : []}
             media={designMedia}
             onPrevious={() => setActiveDesignIndex((index) => (index - 1 + designMedia.length) % designMedia.length)}
             onNext={() => setActiveDesignIndex((index) => (index + 1) % designMedia.length)}
@@ -1035,7 +1033,7 @@ export function VehicleProfile({
                 const currentIndex = activeCardIndex[card.id] || 0;
                 const slide = card.slides[currentIndex % Math.max(card.slides.length, 1)];
                 const fallbackCard =
-                  useYu7Fallback
+                  useYu7DemoFallback
                     ? yu7Fallback.designCards.find((item) => item.group === card.group) || yu7Fallback.designCards[cardIndex]
                     : undefined;
                 const fallbackSlide = fallbackCard?.slides[currentIndex % Math.max(fallbackCard.slides.length, 1)] || fallbackCard?.slides[0];

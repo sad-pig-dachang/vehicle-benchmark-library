@@ -171,7 +171,7 @@ export const fieldAliases = {
   coverImageSource: ['coverImageSource', '封面图来源'],
   productPositioning: ['productPositioning', '产品定位'],
   targetUsers: ['targetUsers', '目标用户'],
-  summary: ['summary', '车型总结', '车型一句话总结', '一句话总结', '总结'],
+  summary: ['summary', '车型总述', '车型总结', '车型一句话总结', '一句话总结', '总结'],
   keyTags: ['keyTags', '车型标签/关键词', '关键标签'],
   scenarioTags: ['scenarioTags', '使用场景标签', '场景标签'],
   hmiTags: ['hmiTags', 'HMI标签', 'HMI 标签'],
