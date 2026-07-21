@@ -2546,6 +2546,7 @@ a {
   font-size: 12px;
   line-height: 18px;
   text-align: center;
+  white-space: pre-line;
 }
 
 .figma-version-table .is-wide p:first-of-type {
