@@ -626,10 +626,23 @@ const KeyValue = ({ label, value }: { label: string; value: string | number | un
 
 const MetricValue = ({ label, value }: { label: string; value: string }) => (
   <div className="figma-metric">
-    <strong>{value}</strong>
-    <span>{label}</span>
+    <strong>{label}</strong>
+    <span>{value}</span>
   </div>
 );
+
+const MarketValue = ({ index, label, value }: { index: number; label: string; value: string }) => {
+  const title = clean(label);
+  const description = clean(value);
+  if (!title && !description) return null;
+
+  return (
+    <div className="figma-kv">
+      <span>{description ? title : `卖点 ${String(index + 1).padStart(2, '0')}`}</span>
+      <strong>{description || title}</strong>
+    </div>
+  );
+};
 
 const NeedTable = ({ rows }: { rows: ProfileSceneNeed[] }) => (
   <div className="figma-need-table">
@@ -759,8 +772,8 @@ export function VehicleProfile({
   const tags = useYu7DemoFallback
     ? yu7Fallback.tags
     : unique([...(vehicle.keyTags || []), ...(profile?.l1?.tags || [])]).slice(0, 5);
-  const l1Targets = (profile?.l1?.targetUsers || []).filter((item) => hasValue(item.keyword) && hasValue(item.description));
-  const marketPoints = (profile?.l1?.marketPoints || []).filter((item) => hasValue(item.keyword) && hasValue(item.description));
+  const l1Targets = (profile?.l1?.targetUsers || []).filter((item) => hasValue(item.keyword) || hasValue(item.description));
+  const marketPoints = (profile?.l1?.marketPoints || []).filter((item) => hasValue(item.keyword) || hasValue(item.description));
   const displayTargets = useYu7DemoFallback && !l1Targets.length ? yu7Fallback.l1Targets : l1Targets;
   const displayMarketPoints = useYu7DemoFallback && !marketPoints.length ? yu7Fallback.marketPoints : marketPoints;
   const l2BasicItems = profile?.l2?.basicItems || [];
@@ -893,8 +906,8 @@ export function VehicleProfile({
             {displayMarketPoints.length > 0 && (
               <Panel title="核心市场卖点与定位标签" kicker="MARKET" className="figma-panel--wide">
                 <div className="figma-market-grid">
-                  {displayMarketPoints.slice(0, 4).map((item: ProfileUserPoint) => (
-                    <KeyValue label={item.keyword} value={item.description} key={item.keyword} />
+                  {displayMarketPoints.slice(0, 4).map((item: ProfileUserPoint, index) => (
+                    <MarketValue index={index} label={item.keyword} value={item.description} key={`${item.keyword}-${index}`} />
                   ))}
                 </div>
               </Panel>

@@ -293,6 +293,73 @@ const pairedUserPoints = (fields, prefixes, max = 6) => {
   return points;
 };
 
+const pointSignature = (point) => `${normalizeText(point.keyword)}\n${normalizeText(point.description)}`;
+
+const uniquePoints = (points) => {
+  const seen = new Set();
+  return points.filter((point) => {
+    if (!normalizeText(point.keyword) && !normalizeText(point.description)) return false;
+    const signature = pointSignature(point);
+    if (seen.has(signature)) return false;
+    seen.add(signature);
+    return true;
+  });
+};
+
+const pointFromL1Child = (fields) => {
+  const moduleName = firstNonEmptyField(fields, ['模块', '类别', '类型', '分组', '内容类型', '竞品ID', '竞品库ID']);
+  const targetKeyword = readAny(fields, [
+    '核心用户关键词',
+    '用户关键词',
+    '目标用户关键词',
+    '核心目标用户',
+    '目标用户',
+    '人群关键词',
+  ]);
+  const marketKeyword = readAny(fields, [
+    '核心市场卖点',
+    '市场卖点',
+    '卖点标题',
+    '卖点',
+    '定位标签',
+    '市场定位标签',
+  ]);
+  const genericKeyword = readAny(fields, [
+    '关键词',
+    '标题',
+  ]);
+  const keyword = targetKeyword || marketKeyword || genericKeyword;
+  const description = readAny(fields, [
+    '对应描述',
+    '描述',
+    '说明',
+    '用户描述',
+    '目标用户描述',
+    '市场卖点描述',
+    '卖点描述',
+    '定位描述',
+    '内容',
+  ]);
+
+  if (!keyword && !description) return null;
+
+  const categoryText = `${moduleName} ${keyword}`;
+  const category =
+    marketKeyword || /市场|卖点|定位/.test(categoryText)
+      ? 'market'
+      : targetKeyword || /用户|人群|客群|目标/.test(categoryText)
+        ? 'target'
+        : '';
+
+  if (!category) return null;
+
+  return {
+    category,
+    keyword: keyword || moduleName,
+    description,
+  };
+};
+
 async function tableNameMap() {
   if (cachedTableNameMap) return cachedTableNameMap;
 
@@ -519,8 +586,23 @@ const traceRecordToVersionLog = (record) => {
 const buildL1Profile = (records, vehicleId) => {
   const record = records.find((item) => readVehicleKey(item.fields || {}, vehicleId) === vehicleId);
   const fields = record?.fields || {};
-  const targetUsers = pairedUserPoints(fields, ['核心目标用户', '目标用户']);
-  let marketPoints = pairedUserPoints(fields, ['核心市场卖点', '市场卖点', '定位标签', '卖点']);
+  const childPoints = childRowsBySequence(records, vehicleId, (_record, rowFields) => pointFromL1Child(rowFields));
+  const childTargetUsers = childPoints.filter((point) => point.category === 'target');
+  const childMarketPoints = childPoints.filter((point) => point.category === 'market');
+  const targetUsers = uniquePoints(
+    (childTargetUsers.length ? childTargetUsers : pairedUserPoints(fields, ['核心目标用户', '目标用户'])).map(({ keyword, description }) => ({
+      keyword,
+      description,
+    })),
+  );
+  let marketPoints = uniquePoints(
+    (childMarketPoints.length ? childMarketPoints : pairedUserPoints(fields, ['核心市场卖点', '市场卖点', '定位标签', '卖点'])).map(
+      ({ keyword, description }) => ({
+        keyword,
+        description,
+      }),
+    ),
+  );
 
   if (!marketPoints.length) {
     marketPoints = Object.entries(fields)
