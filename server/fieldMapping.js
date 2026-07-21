@@ -36,17 +36,39 @@ const mediaTokenFromField = (value) => {
   return mediaTokenFromText(value);
 };
 
+const formatDateText = (value) => {
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp) || Math.abs(timestamp) < 100000000000) return '';
+
+  const parts = new Intl.DateTimeFormat('zh-CN', {
+    day: 'numeric',
+    month: 'numeric',
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+  }).formatToParts(new Date(timestamp));
+  const partMap = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${partMap.year}年${partMap.month}月${partMap.day}日`;
+};
+
+const readableFieldValue = (value) => {
+  const dateValue = typeof value === 'number' ? formatDateText(value) : '';
+  if (dateValue) return dateValue;
+  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : '';
+};
+
 const arrayFromField = (value) => {
   if (Array.isArray(value)) {
     return value
       .map((item) => {
-        if (typeof item === 'string') return item;
-        if (item?.text) return item.text;
-        if (item?.name) return item.name;
-        if (item?.url) return item.url;
-        if (item?.tmp_url) return item.tmp_url;
-        if (item?.link) return item.link;
-        return String(item);
+        if (typeof item !== 'object' || item === null) return readableFieldValue(item);
+        return readableFieldValue(item.text) ||
+          readableFieldValue(item.name) ||
+          readableFieldValue(item.value) ||
+          readableFieldValue(item.display_name) ||
+          readableFieldValue(item.en_name) ||
+          readableFieldValue(item.url) ||
+          readableFieldValue(item.tmp_url) ||
+          (typeof item.link === 'string' ? item.link : '');
       })
       .filter(Boolean);
   }
@@ -75,13 +97,23 @@ const boolFromField = (value) => {
 
 const textFromField = (value, fallback = '') => {
   if (Array.isArray(value)) {
-    return value.map((item) => item?.url || item?.tmp_url || item?.link || item?.text || item?.name || String(item)).join('');
+    const values = value.map((item) => textFromField(item, '')).filter(Boolean);
+    const hasRichTextParts = value.some((item) => typeof item === 'object' && item !== null && item.text);
+    return values.join(hasRichTextParts ? '' : ' / ');
   }
   if (typeof value === 'object' && value !== null) {
-    return value.url || value.tmp_url || value.link || value.text || value.name || JSON.stringify(value);
+    return readableFieldValue(value.url) ||
+      readableFieldValue(value.tmp_url) ||
+      (typeof value.link === 'string' ? value.link : '') ||
+      readableFieldValue(value.text) ||
+      readableFieldValue(value.name) ||
+      readableFieldValue(value.value) ||
+      readableFieldValue(value.display_name) ||
+      readableFieldValue(value.en_name) ||
+      fallback;
   }
   if (value === undefined || value === null) return fallback;
-  return String(value);
+  return readableFieldValue(value) || fallback;
 };
 
 const urlFromField = (value, fallback = '') => {
@@ -107,8 +139,7 @@ const urlFromField = (value, fallback = '') => {
 
 const dateFromField = (value, fallback = '') => {
   if (typeof value === 'number') {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? fallback : date.toISOString().slice(0, 10);
+    return formatDateText(value) || fallback;
   }
 
   return textFromField(value, fallback);

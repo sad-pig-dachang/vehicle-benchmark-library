@@ -32,15 +32,49 @@ const tableNameCandidates = {
   l5Trace: ['L5-测评与追溯层', 'L5-测评与追溯层1'],
 };
 
+const formatDateValue = (value) => {
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp) || Math.abs(timestamp) < 100000000000) return '';
+
+  const parts = new Intl.DateTimeFormat('zh-CN', {
+    day: 'numeric',
+    month: 'numeric',
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+  }).formatToParts(new Date(timestamp));
+  const partMap = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${partMap.year}年${partMap.month}月${partMap.day}日`;
+};
+
+const readableValue = (value) => {
+  const dateValue = typeof value === 'number' ? formatDateValue(value) : '';
+  if (dateValue) return dateValue;
+  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : '';
+};
+
 const readFieldText = (value, fallback = '') => {
   if (Array.isArray(value)) {
-    return value.map((item) => item?.text || item?.name || item?.url || item?.tmp_url || item?.link || String(item)).join('');
+    const values = value
+      .map((item) => readFieldText(item, ''))
+      .filter(Boolean);
+    const hasRichTextParts = value.some((item) => typeof item === 'object' && item !== null && item.text);
+    return values.join(hasRichTextParts ? '' : ' / ');
   }
   if (typeof value === 'object' && value !== null) {
-    return value.text || value.name || value.url || value.tmp_url || value.link || JSON.stringify(value);
+    const picked = [
+      value.text,
+      value.name,
+      value.value,
+      value.display_name,
+      value.en_name,
+      value.url,
+      value.tmp_url,
+      typeof value.link === 'string' ? value.link : '',
+    ].map(readableValue).find(Boolean);
+    return picked || fallback;
   }
   if (value === undefined || value === null) return fallback;
-  return String(value);
+  return readableValue(value) || fallback;
 };
 
 const byVehicleId = (records, vehicleId) =>

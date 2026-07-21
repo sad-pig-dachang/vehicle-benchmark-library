@@ -696,7 +696,7 @@ const SceneBlock = ({
         )}
       </div>
       {scene.needs.length > 0 && (
-        <Panel title="基于行为需求现有的功能拆解" kicker="Hexin jichu dangan" className="figma-scene__table">
+        <Panel title="基于行为需求现有的功能拆解" kicker="Behavior Needs Breakdown" className="figma-scene__table">
           <NeedTable rows={scene.needs} />
         </Panel>
       )}
@@ -922,7 +922,7 @@ export function VehicleProfile({
           {(baseRows.length > 0 || configRows.length > 0) && (
             <div className="figma-two">
               {baseRows.length > 0 && (
-                <Panel title="核心基础档案" kicker="Hexin jichu dangan">
+                <Panel title="核心基础档案" kicker="Core Profile">
                   <div className="figma-basic-list">
                     {baseRows.map((row) => (
                       <KeyValue label={row.label} value={row.value} key={row.label} />
@@ -931,7 +931,7 @@ export function VehicleProfile({
                 </Panel>
               )}
               {configRows.length > 0 && (
-                <Panel title="智能与配置核心信息" kicker="Zhineng yupeizhi hexinxinxi">
+                <Panel title="智能与配置核心信息" kicker="Intelligence & Configuration">
                   <div className="figma-config-table">
                     <div>
                       <span />
@@ -951,7 +951,7 @@ export function VehicleProfile({
             </div>
           )}
           {versionRows.length > 0 && (
-            <Panel title="核心硬件参数总表" kicker="Hexin jichu dangan" className="figma-panel--full">
+            <Panel title="核心硬件参数总表" kicker="Core Hardware Specs" className="figma-panel--full">
               <div className="figma-version-table">
                 <div className="figma-version-table__head">
                   <span />
@@ -1092,7 +1092,7 @@ export function VehicleProfile({
           />
           <div className="figma-score-layout">
             {score && (
-              <Panel title="核心基础档案" kicker="Hexin jichu dangan" className="figma-score-card">
+              <Panel title="核心基础档案" kicker="Score Summary" className="figma-score-card">
                 <div className="figma-score-ring" style={{ '--score': `${scorePercent}%` } as CSSProperties}>
                   <strong>{score}</strong>
                   <span>整体评分 / {totalScore}</span>
@@ -1107,13 +1107,13 @@ export function VehicleProfile({
                 </div>
               </Panel>
             )}
-            <Panel title="模块评测逻辑" kicker="Hexin jichu dangan" className="figma-score-copy">
+            <Panel title="模块评测逻辑" kicker="Evaluation Logic" className="figma-score-copy">
               {fixedScoreLogic.map(([label, value]) => (
                 <KeyValue label={label} value={value} key={label} />
               ))}
             </Panel>
             {scoreRows.length > 0 && (
-              <Panel title="核心评测参数总表" kicker="Hexin jichu dangan" className="figma-score-table-panel">
+              <Panel title="核心评测参数总表" kicker="Evaluation Score Table" className="figma-score-table-panel">
                 <div className="figma-score-table">
                   <div>
                     <span>评测维度</span>
