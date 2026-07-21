@@ -82,6 +82,41 @@ const mediaFromUrl = (vehicleId, id, url, title) =>
 const mediaUrlFromToken = (fileToken) =>
   fileToken ? `/api/feishu/media/${encodeURIComponent(fileToken)}` : '';
 
+const mediaTokenFromText = (value = '') => {
+  const text = String(value || '');
+  return (
+    text.match(/\/drive\/v1\/medias\/([^/?#]+)\/download/)?.[1] ||
+    text.match(/[?&]file_token=([^&#]+)/)?.[1] ||
+    ''
+  );
+};
+
+const mediaTokenFromValue = (value) => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const token = mediaTokenFromValue(item);
+      if (token) return token;
+    }
+    return '';
+  }
+
+  if (typeof value === 'object') {
+    return (
+      value.file_token ||
+      value.fileToken ||
+      value.media_token ||
+      value.mediaToken ||
+      mediaTokenFromText(value.url) ||
+      mediaTokenFromText(value.tmp_url) ||
+      mediaTokenFromText(value.link) ||
+      ''
+    );
+  }
+
+  return mediaTokenFromText(value);
+};
+
 const metadataFields = new Set([
   '品牌',
   '车型',
@@ -104,6 +139,9 @@ const fieldValueByNames = (fields, names) => {
 
 const extractUrl = (value) => {
   if (!value) return '';
+  const mediaToken = mediaTokenFromValue(value);
+  if (mediaToken) return mediaUrlFromToken(mediaToken);
+
   if (Array.isArray(value)) {
     for (const item of value) {
       const url = extractUrl(item);
@@ -112,7 +150,7 @@ const extractUrl = (value) => {
     return '';
   }
   if (typeof value === 'object') {
-    return value.url || value.tmp_url || value.link || mediaUrlFromToken(value.file_token) || '';
+    return value.url || value.tmp_url || value.link || '';
   }
   const text = String(value);
   return text.match(/https?:\/\/[^\s，,]+/)?.[0] || '';
@@ -344,7 +382,6 @@ const sceneRecordToBenchmarkPoint = (record) => {
   const vehicleId = readAny(fields, ['车型ID', 'vehicleId']);
   const id = readAny(fields, ['场景ID', '对标点ID'], record.record_id);
   const title = readAny(fields, ['场景标题', '标题']);
-  const url = readAny(fields, ['图片/视频封面链接', '图片链接', '截图链接']);
 
   return {
     recordId: record.record_id,
@@ -357,7 +394,7 @@ const sceneRecordToBenchmarkPoint = (record) => {
     highlight: readAny(fields, ['体验亮点', '亮点']),
     issue: readAny(fields, ['问题', '问题/待验证']),
     referenceValue: readAny(fields, ['可借鉴点', '引用价值/设计影响']),
-    media: mediaFromUrl(vehicleId, id, url, title),
+    media: mediaFromFields(fields, ['图片/视频封面链接', '图片链接', '截图链接'], vehicleId, id, title),
   };
 };
 
@@ -391,7 +428,6 @@ const stylingRecordToBenchmarkPoint = (record) => {
   const group = readAny(fields, ['分组', '模块']);
   const id = readAny(fields, ['机会ID', '对标点ID'], record.record_id);
   const title = readAny(fields, ['标题', '对标标题']);
-  const url = readAny(fields, ['图片链接', '图片/视频封面链接']);
 
   return {
     recordId: record.record_id,
@@ -405,7 +441,7 @@ const stylingRecordToBenchmarkPoint = (record) => {
     detailDesign: readAny(fields, ['细节设计']),
     materialColor: readAny(fields, ['材质/色彩', '材质色彩']),
     referenceValue: readAny(fields, ['可借鉴点', '引用价值/设计影响']),
-    media: mediaFromUrl(vehicleId, id, url, title),
+    media: mediaFromFields(fields, ['图片链接', '图片/视频封面链接'], vehicleId, id, title),
   };
 };
 
@@ -415,7 +451,6 @@ const designRecordToBenchmarkPoint = (record) => {
   const moduleName = readAny(fields, ['模块']);
   const id = readAny(fields, ['对标ID', '对标点ID'], record.record_id);
   const title = readAny(fields, ['对标标题', '标题']);
-  const url = readAny(fields, ['图片链接', '图片/视频封面链接']);
   const categoryMap = {
     外饰: 'exterior',
     内饰: 'interior',
@@ -435,7 +470,7 @@ const designRecordToBenchmarkPoint = (record) => {
     issue: readAny(fields, ['问题/待验证', '问题']),
     referenceValue: readAny(fields, ['可借鉴点']),
     stylingFeature: readAny(fields, ['设计看点']),
-    media: mediaFromUrl(vehicleId, id, url, title),
+    media: mediaFromFields(fields, ['图片链接', '图片/视频封面链接'], vehicleId, id, title),
   };
 };
 

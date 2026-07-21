@@ -1,6 +1,41 @@
 const mediaUrlFromToken = (fileToken) =>
   fileToken ? `/api/feishu/media/${encodeURIComponent(fileToken)}` : '';
 
+const mediaTokenFromText = (value = '') => {
+  const text = String(value || '');
+  return (
+    text.match(/\/drive\/v1\/medias\/([^/?#]+)\/download/)?.[1] ||
+    text.match(/[?&]file_token=([^&#]+)/)?.[1] ||
+    ''
+  );
+};
+
+const mediaTokenFromField = (value) => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const token = mediaTokenFromField(item);
+      if (token) return token;
+    }
+    return '';
+  }
+
+  if (typeof value === 'object') {
+    return (
+      value.file_token ||
+      value.fileToken ||
+      value.media_token ||
+      value.mediaToken ||
+      mediaTokenFromText(value.url) ||
+      mediaTokenFromText(value.tmp_url) ||
+      mediaTokenFromText(value.link) ||
+      ''
+    );
+  }
+
+  return mediaTokenFromText(value);
+};
+
 const arrayFromField = (value) => {
   if (Array.isArray(value)) {
     return value
@@ -50,6 +85,9 @@ const textFromField = (value, fallback = '') => {
 };
 
 const urlFromField = (value, fallback = '') => {
+  const mediaToken = mediaTokenFromField(value);
+  if (mediaToken) return mediaUrlFromToken(mediaToken);
+
   if (Array.isArray(value)) {
     for (const item of value) {
       const url = urlFromField(item, '');
@@ -59,7 +97,7 @@ const urlFromField = (value, fallback = '') => {
   }
 
   if (typeof value === 'object' && value !== null) {
-    return value.url || value.tmp_url || value.link || mediaUrlFromToken(value.file_token) || fallback;
+    return value.url || value.tmp_url || value.link || fallback;
   }
 
   const raw = textFromField(value, '').trim();
