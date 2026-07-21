@@ -2413,17 +2413,17 @@ a {
 
 .figma-metric strong {
   color: #f5f7fa;
-  font-size: 44px;
+  font-size: 28px;
   font-weight: 800;
-  line-height: 1.08;
+  line-height: 1.24;
 }
 
 .figma-metric span {
-  margin-top: 22px;
+  margin-top: 14px;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 23px;
+  line-height: 21px;
 }
 
 .figma-market-grid {
