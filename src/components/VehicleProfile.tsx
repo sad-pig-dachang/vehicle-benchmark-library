@@ -64,7 +64,7 @@ interface GalleryCard {
 }
 
 const navItems = ['L1 用户市场', 'L2 竞品档案', 'L3 对标分析', 'L4 设计对标', 'L5 测评追溯'];
-const versionColumns = ['标准版', 'Pro 版', 'Max 版', 'GT 版'];
+const versionColumns = ['标准版', '中配', '高配', '特殊版'];
 
 const fixedScoreBreakdown = [
   ['1.X 外部实用体验', '14 / 20'],
@@ -235,9 +235,9 @@ const parseVersionMatrix = (rows: ProfileSpecRow[]) => {
       const text = rowText(row);
       const values = [
         textAfterLabel(text, ['标准版']),
-        textAfterLabel(text, ['Pro版', 'Pro 版']),
-        textAfterLabel(text, ['Max版', 'Max 版']),
-        textAfterLabel(text, ['GT版', 'GT 版']),
+        textAfterLabel(text, ['中配', 'Pro版', 'Pro 版']),
+        textAfterLabel(text, ['高配', 'Max版', 'Max 版']),
+        textAfterLabel(text, ['特殊版', 'GT版', 'GT 版']),
       ];
       const fallback = clean(row.value);
       return {
