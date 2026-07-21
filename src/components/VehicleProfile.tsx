@@ -182,16 +182,30 @@ const visibleIdOf = (vehicle: Vehicle, fallback: string) => {
 
 const isYu7Vehicle = (vehicle: Vehicle) => `${vehicle.brand} ${vehicle.model}`.toLowerCase().includes('yu7') || vehicle.model.includes('小米');
 
-const textAfterLabel = (source: string, labels: string[]) => {
+const textBlockAfterLabel = (source: string, labels: string[], stopLabels: string[]) => {
   const lines = clean(source)
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
 
-  for (const label of labels) {
-    const pattern = new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[:：]\\s*(.*)$`, 'i');
-    const matched = lines.find((line) => pattern.test(line));
-    if (matched) return matched.replace(pattern, '$1').trim();
+  for (let index = 0; index < lines.length; index += 1) {
+    for (const label of labels) {
+      const pattern = new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[:：]\\s*(.*)$`, 'i');
+      const matched = lines[index].match(pattern);
+      if (!matched) continue;
+
+      const block = [matched[1].trim()].filter(Boolean);
+      for (let nextIndex = index + 1; nextIndex < lines.length; nextIndex += 1) {
+        const nextLine = lines[nextIndex];
+        const isNextBlock = stopLabels.some((stopLabel) => {
+          const stopPattern = new RegExp(`^${stopLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[:：]`, 'i');
+          return stopPattern.test(nextLine);
+        });
+        if (isNextBlock) break;
+        block.push(nextLine);
+      }
+      return block.join('\n').trim();
+    }
   }
 
   return '';
@@ -203,6 +217,8 @@ const specRowByLabel = (rows: ProfileSpecRow[], names: string[]) =>
   rows.find((row) => names.some((name) => clean(row.label).includes(name)));
 
 const parseConfigMatrix = (rows: ProfileSpecRow[]) => {
+  const configColumnAliases = [['全系标配'], ['版本专属配置', '版本配置']];
+  const allConfigAliases = configColumnAliases.flat();
   const labels = ['智能座舱', '智能驾驶', '舒适配置'];
   return labels
     .map((label) => {
@@ -211,14 +227,21 @@ const parseConfigMatrix = (rows: ProfileSpecRow[]) => {
       const text = rowText(row);
       return {
         label,
-        standard: textAfterLabel(text, ['全系标配']) || clean(row.value),
-        version: textAfterLabel(text, ['版本专属配置', '版本配置']),
+        standard: textBlockAfterLabel(text, configColumnAliases[0], allConfigAliases) || clean(row.value),
+        version: textBlockAfterLabel(text, configColumnAliases[1], allConfigAliases),
       };
     })
     .filter((row): row is ConfigMatrixRow => Boolean(row && (row.standard || row.version)));
 };
 
 const parseVersionMatrix = (rows: ProfileSpecRow[]) => {
+  const columnAliases = [
+    ['标准版'],
+    ['中配', 'Pro版', 'Pro 版'],
+    ['高配', 'Max版', 'Max 版'],
+    ['特殊版', 'GT版', 'GT 版'],
+  ];
+  const allColumnAliases = columnAliases.flat();
   const rowLabels = [
     ['驱动形式', '驱动'],
     ['峰值功率', '功率'],
@@ -233,12 +256,7 @@ const parseVersionMatrix = (rows: ProfileSpecRow[]) => {
       const row = specRowByLabel(rows, [displayLabel, ...aliases]);
       if (!row) return null;
       const text = rowText(row);
-      const values = [
-        textAfterLabel(text, ['标准版']),
-        textAfterLabel(text, ['中配', 'Pro版', 'Pro 版']),
-        textAfterLabel(text, ['高配', 'Max版', 'Max 版']),
-        textAfterLabel(text, ['特殊版', 'GT版', 'GT 版']),
-      ];
+      const values = columnAliases.map((labels) => textBlockAfterLabel(text, labels, allColumnAliases));
       const fallback = clean(row.value);
       return {
         label: displayLabel,
