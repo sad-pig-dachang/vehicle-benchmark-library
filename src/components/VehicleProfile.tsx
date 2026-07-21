@@ -904,7 +904,7 @@ export function VehicleProfile({
               </Panel>
             )}
             {displayMarketPoints.length > 0 && (
-              <Panel title="核心市场卖点与定位标签" kicker="MARKET" className="figma-panel--wide">
+              <Panel title="核心市场卖点" kicker="MARKET" className="figma-panel--wide">
                 <div className="figma-market-grid">
                   {displayMarketPoints.slice(0, 4).map((item: ProfileUserPoint, index) => (
                     <MarketValue index={index} label={item.keyword} value={item.description} key={`${item.keyword}-${index}`} />
