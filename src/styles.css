@@ -2718,6 +2718,65 @@ a {
   border-radius: 16px;
 }
 
+.figma-opportunity-card {
+  min-height: 620px;
+}
+
+.figma-opportunity-card__header {
+  margin-bottom: 48px;
+}
+
+.figma-opportunity-card__header h3 {
+  margin: 0 0 8px;
+  color: #f5f7fa;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 29px;
+}
+
+.figma-opportunity-card__header p {
+  margin: 0;
+  color: #ff7a2f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+}
+
+.figma-opportunity-card__details {
+  display: grid;
+  gap: 24px;
+}
+
+.figma-opportunity-card__details > div {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.figma-opportunity-card__details strong {
+  color: #ff7a2f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+.figma-opportunity-card__details p,
+.figma-opportunity-card__details ul {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: pre-line;
+}
+
+.figma-opportunity-card__details ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+}
+
 .figma-section--l4 {
   padding-top: 64px;
 }

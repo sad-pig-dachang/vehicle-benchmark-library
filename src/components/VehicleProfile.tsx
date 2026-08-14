@@ -1034,18 +1034,67 @@ export function VehicleProfile({
             <>
               <SectionHeader kicker="L3 STYLING OPPORTUNITIES" title="L3-造型机会点" intro="把场景、功能与设计可落地机会连接起来。" />
               <div className="figma-card-grid">
-                {displayOpportunities.map((item: ProfileOpportunity) => (
-                  <article className="figma-opportunity-card" key={item.id}>
-                    {(hasValue(item.type) || hasValue(item.priority)) && (
-                      <p>{[item.type, item.priority].filter(hasValue).join(' · ')}</p>
-                    )}
-                    {hasValue(item.title) && <h3>{item.title}</h3>}
-                    <KeyValue label="来源线索" value={item.source} />
-                    <KeyValue label="可做方向" value={item.direction} />
-                    <KeyValue label="功能描述" value={item.description} />
-                    <KeyValue label="设计价值" value={item.designValue} />
-                  </article>
-                ))}
+                {displayOpportunities.map((item: ProfileOpportunity, index) => {
+                  const directionItems = clean(item.direction)
+                    .split('\n')
+                    .map((line) => line.trim())
+                    .filter(Boolean);
+
+                  return (
+                    <article className="figma-opportunity-card" key={item.id}>
+                      <div className="figma-opportunity-card__header">
+                        <h3>机会{index + 1}: {item.title}</h3>
+                        <p>Styling Opportunity</p>
+                      </div>
+                      <div className="figma-opportunity-card__details">
+                        {hasValue(item.type) && (
+                          <div>
+                            <strong>机会类型</strong>
+                            <p>{item.type}</p>
+                          </div>
+                        )}
+                        {hasValue(item.priority) && (
+                          <div>
+                            <strong>优先级</strong>
+                            <p>{item.priority}</p>
+                          </div>
+                        )}
+                        {hasValue(item.source) && (
+                          <div>
+                            <strong>来源线索</strong>
+                            <p>{item.source}</p>
+                          </div>
+                        )}
+                        {directionItems.length > 0 && (
+                          <div>
+                            <strong>可做方向</strong>
+                            {directionItems.length > 1 ? (
+                              <ul>
+                                {directionItems.map((direction, directionIndex) => (
+                                  <li key={`${direction}-${directionIndex}`}>{direction}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p>{directionItems[0]}</p>
+                            )}
+                          </div>
+                        )}
+                        {hasValue(item.description) && (
+                          <div>
+                            <strong>功能描述</strong>
+                            <p>{item.description}</p>
+                          </div>
+                        )}
+                        {hasValue(item.designValue) && (
+                          <div>
+                            <strong>设计价值</strong>
+                            <p>{item.designValue}</p>
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </>
           )}
