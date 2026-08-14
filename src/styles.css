@@ -2513,9 +2513,13 @@ a {
   min-height: 477px;
 }
 
+.figma-panel--full .figma-panel__kicker {
+  margin-bottom: 36px;
+}
+
 .figma-version-table {
   display: grid;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .figma-version-table > div {
@@ -2525,6 +2529,10 @@ a {
   min-height: 52px;
   padding: 16px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.figma-version-table > div:last-child {
+  border-bottom: 0;
 }
 
 .figma-version-table span,
