@@ -2630,6 +2630,7 @@ a {
 
 .figma-need-table__head {
   min-height: 56px;
+  border-top: 0;
 }
 
 .figma-need-table__head span,
@@ -2637,6 +2638,10 @@ a {
 .figma-need-table__row span {
   font-size: 12px;
   line-height: 18px;
+}
+
+.figma-need-table__row .is-placeholder {
+  text-align: center;
 }
 
 .figma-card-grid {

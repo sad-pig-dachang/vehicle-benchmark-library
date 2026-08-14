@@ -266,16 +266,6 @@ const parseVersionMatrix = (rows: ProfileSpecRow[]) => {
     .filter((row): row is VersionMatrixRow => Boolean(row && row.values.some(hasValue)));
 };
 
-const mergeSceneImages = (scenes: ProfileScene[], fallbacks: ProfileScene[], enableFallback: boolean) => {
-  if (!scenes.length) return enableFallback ? fallbacks : [];
-  return scenes.map((scene, index) => ({
-    ...scene,
-    source: clean(scene.source) || fallbacks[index]?.source || '',
-    image: scene.image?.url ? scene.image : fallbacks[index]?.image,
-    needs: scene.needs?.length ? scene.needs : fallbacks[index]?.needs || [],
-  }));
-};
-
 const mergeScoreRows = (rows: ProfileScoreRow[], fallback: ProfileScoreRow[], enableFallback: boolean) => {
   if (!enableFallback) return rows;
   if (!rows.length) return fallback;
@@ -666,38 +656,34 @@ const NeedTable = ({ rows }: { rows: ProfileSceneNeed[] }) => (
   <div className="figma-need-table">
     <div className="figma-need-table__head">
       <span>行为需求</span>
-      <span>YU7 已有硬件支撑</span>
-      <span>YU7 已有软件 / HMI 支撑</span>
+      <span>已有硬件支撑</span>
+      <span>已有软件/HMI支撑</span>
       <span>现有体验判断</span>
     </div>
     {rows.map((row, index) => (
       <div className="figma-need-table__row" key={`${row.need}-${index}`}>
         <strong>{clean(row.need)}</strong>
-        <span>{clean(row.hardware)}</span>
-        <span>{clean(row.software)}</span>
-        <span>{clean(row.judgement)}</span>
+        <span className={clean(row.hardware) === '/' ? 'is-placeholder' : undefined}>{clean(row.hardware)}</span>
+        <span className={clean(row.software) === '/' ? 'is-placeholder' : undefined}>{clean(row.software)}</span>
+        <span className={clean(row.judgement) === '/' ? 'is-placeholder' : undefined}>{clean(row.judgement)}</span>
       </div>
     ))}
   </div>
 );
 
 const SceneBlock = ({
-  fallbackImage,
   index,
   scene,
 }: {
-  fallbackImage?: MediaAsset;
   index: number;
   scene: ProfileScene;
 }) => {
   const sceneImage = assetUrl(scene.image);
-  const fallbackSceneImage = assetUrl(fallbackImage);
-  const displayImage = sceneImage || fallbackSceneImage;
-  const notes = scene.needs.filter((row) => hasValue(row.need) && (hasValue(row.note) || hasValue(row.judgement)));
+  const notes = scene.needs.filter((row) => hasValue(row.need) && hasValue(row.note));
 
   return (
-    <div className={`figma-scene ${displayImage ? '' : 'figma-scene--text-only'}`}>
-      {displayImage && <FigmaImage alt={scene.title} src={sceneImage} fallbackSrc={fallbackSceneImage} />}
+    <div className={`figma-scene ${sceneImage ? '' : 'figma-scene--text-only'}`}>
+      {sceneImage && <FigmaImage alt={scene.title} src={sceneImage} />}
       <div className="figma-scene__copy">
         <p>Scene {String(index + 1).padStart(2, '0')}</p>
         <h3>{scene.title}</h3>
@@ -707,7 +693,7 @@ const SceneBlock = ({
             {notes.map((row, noteIndex) => (
               <div key={`${row.need}-${noteIndex}`}>
                 <dt>{row.need}</dt>
-                <dd>{clean(row.note) || clean(row.judgement)}</dd>
+                <dd>{clean(row.note)}</dd>
               </div>
             ))}
           </dl>
@@ -818,11 +804,11 @@ export function VehicleProfile({
   const configRows = parsedConfigRows.length ? parsedConfigRows : useYu7DemoFallback ? yu7Fallback.configRows : [];
   const parsedVersionRows = parseVersionMatrix(specRows);
   const versionRows = parsedVersionRows.length ? parsedVersionRows : useYu7DemoFallback ? yu7Fallback.versionRows : [];
-  const scenes = mergeSceneImages((profile?.l3Scenes || []).filter((scene) => hasValue(scene.title)), yu7Fallback.scenes, useYu7DemoFallback);
+  const scenes = (profile?.l3Scenes || []).filter((scene) => hasValue(scene.title));
   const features = (profile?.l3Features || []).filter((item) => hasValue(item.title) || hasValue(item.feature));
-  const displayFeatures = features.length ? features : useYu7DemoFallback ? yu7Fallback.features : [];
+  const displayFeatures = features;
   const opportunities = (profile?.l3Styling || []).filter((item) => hasValue(item.title) || hasValue(item.description));
-  const displayOpportunities = opportunities.length ? opportunities : useYu7DemoFallback ? yu7Fallback.opportunities : [];
+  const displayOpportunities = opportunities;
   const designReferences = (profile?.l4Design?.references || []).filter((item) => hasValue(item.description) || hasValue(item.image?.url));
   const profileDesignMedia = [
     ...(profile?.l4Design?.heroImages || []),
@@ -996,7 +982,6 @@ export function VehicleProfile({
               <SectionHeader kicker="L3 BENCHMARK / EXPERIENCE" title="L3-场景对标分析层" intro="场景对标、功能亮点与机会清单" />
               {scenes.map((scene, index) => (
                 <SceneBlock
-                  fallbackImage={useYu7DemoFallback ? yu7Fallback.scenes[index]?.image : undefined}
                   key={scene.id}
                   scene={scene}
                   index={index}

@@ -740,58 +740,83 @@ const specFromL2Profile = (profile = {}) => {
   return spec;
 };
 
-const buildL3Scenes = (records, vehicleId) => {
-  const scenes = [];
-  let currentScene = null;
-  let activeVehicleId = '';
-  const parentRecordIds = new Set(
+export const buildL3Scenes = (records, vehicleId) => {
+  const vehicleParentRecordIds = new Set(
     records
       .filter((record) => isVehicleParentRow(record.fields || {}, vehicleId))
       .map((record) => record.record_id),
   );
+  const sceneEntries = records
+    .map((record) => {
+      const fields = record.fields || {};
+      const title = readAny(fields, ['场景名称', '场景标题']);
+      if (!title) return null;
 
+      const belongsToVehicle =
+        matchesParent(fields, vehicleId, vehicleParentRecordIds) ||
+        readVehicleKey(fields, vehicleId) === vehicleId;
+      if (!belongsToVehicle) return null;
+
+      const sceneKey = readAny(fields, ['竞品库ID', '场景ID', '场景编号']);
+      return {
+        record,
+        keys: new Set([record.record_id, sceneKey, title].filter(Boolean)),
+        scene: {
+          id: record.record_id,
+          title,
+          source: readAny(fields, ['场景来源', '来源']),
+          image: mediaFromFields(fields, ['场景图片', '图片', '场景图'], vehicleId, record.record_id, title),
+          needs: [],
+        },
+      };
+    })
+    .filter(Boolean);
+
+  const sceneByParentToken = new Map();
+  const sceneByRecordId = new Map();
+  for (const entry of sceneEntries) {
+    sceneByRecordId.set(entry.record.record_id, entry.scene);
+    for (const key of entry.keys) sceneByParentToken.set(key, entry.scene);
+  }
+
+  let activeScene = null;
   for (const record of records) {
     const fields = record.fields || {};
-
-    if (isVehicleParentRow(fields, vehicleId)) {
-      activeVehicleId = vehicleId;
-    } else if (readVehicleKey(fields) && readVehicleKey(fields) !== vehicleId) {
-      activeVehicleId = '';
-      currentScene = null;
-    }
-
-    const isActive =
-      matchesParent(fields, vehicleId, parentRecordIds) ||
-      (!hasStrictParentField(fields) && activeVehicleId === vehicleId) ||
-      readVehicleKey(fields, vehicleId) === vehicleId;
-    if (!isActive) continue;
-
-    const sceneTitle = readAny(fields, ['场景名称', '场景标题']);
-    if (sceneTitle) {
-      currentScene = {
-        id: record.record_id,
-        title: sceneTitle,
-        source: readAny(fields, ['场景来源', '来源']),
-        image: mediaFromFields(fields, ['场景图片', '图片', '场景图'], vehicleId, record.record_id, sceneTitle),
-        needs: [],
-      };
-      scenes.push(currentScene);
+    const nextScene = sceneByRecordId.get(record.record_id);
+    if (nextScene) {
+      activeScene = nextScene;
       continue;
     }
 
     const need = readAny(fields, ['行为需求', '用户需求']);
-    if (need && currentScene) {
-      currentScene.needs.push({
+    if (!need) continue;
+
+    const linkedScene = parentTokens(fields)
+      .map((token) => sceneByParentToken.get(token))
+      .find(Boolean);
+    const targetScene = linkedScene || (!hasStrictParentField(fields) ? activeScene : null);
+    if (targetScene) {
+      targetScene.needs.push({
         need,
         note: readAny(fields, ['行为需求备注', '需求备注']),
         hardware: readAny(fields, ['YU7 已有硬件支撑', 'YU7已有硬件支撑', '已有硬件支撑', '硬件支撑']),
-        software: readAny(fields, ['YU7 已有软件/HMI 支撑', 'YU7已有软件/HMI支撑', 'YU7已有软件HMI支撑', '软件/HMI支撑', '软件HMI支撑']),
+        software: readAny(fields, [
+          'YU7 已有软件 / HMI 支撑',
+          'YU7 已有软件/HMI 支撑',
+          'YU7已有软件/HMI支撑',
+          'YU7已有软件HMI支撑',
+          '已有软件 / HMI 支撑',
+          '已有软件/HMI支撑',
+          '软件 / HMI 支撑',
+          '软件/HMI支撑',
+          '软件HMI支撑',
+        ]),
         judgement: readAny(fields, ['竞品判断', '现有体验判断', '判断']),
       });
     }
   }
 
-  return scenes;
+  return sceneEntries.map((entry) => entry.scene);
 };
 
 const buildL3Features = (records, vehicleId) =>
