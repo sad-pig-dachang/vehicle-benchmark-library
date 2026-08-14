@@ -2719,7 +2719,14 @@ a {
 }
 
 .figma-opportunity-card {
-  min-height: 620px;
+  min-height: 0;
+  height: 100%;
+  padding-bottom: 32px;
+}
+
+.figma-card-grid--opportunities {
+  grid-auto-rows: 1fr;
+  align-items: stretch;
 }
 
 .figma-opportunity-card__header {

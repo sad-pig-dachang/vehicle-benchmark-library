@@ -1033,7 +1033,7 @@ export function VehicleProfile({
           {displayOpportunities.length > 0 && (
             <>
               <SectionHeader kicker="L3 STYLING OPPORTUNITIES" title="L3-造型机会点" intro="把场景、功能与设计可落地机会连接起来。" />
-              <div className="figma-card-grid">
+              <div className="figma-card-grid figma-card-grid--opportunities">
                 {displayOpportunities.map((item: ProfileOpportunity, index) => {
                   const directionItems = clean(item.direction)
                     .split('\n')
