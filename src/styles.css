@@ -2936,7 +2936,9 @@ a {
 
 .figma-score-copy {
   grid-column: 1;
-  height: 381px;
+  height: auto;
+  min-height: 0;
+  padding-bottom: 32px;
   display: block;
 }
 
@@ -3032,12 +3034,17 @@ a {
 
 .figma-score-copy .figma-kv strong {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 23px;
 }
 
+.figma-score-table-panel .figma-panel__kicker {
+  margin-bottom: 0;
+}
+
 .figma-score-table {
-  margin-top: 16px;
+  margin-top: 36px;
+  border-top: 0;
 }
 
 .figma-score-table > div {
@@ -3045,10 +3052,20 @@ a {
   gap: 24px;
   min-height: 64px;
   padding: 8px 0;
+  border-bottom: 0;
 }
 
 .figma-score-table > div:first-child {
   min-height: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.figma-score-table > div.figma-score-table__group-start {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.figma-score-table > div:last-child {
+  border-bottom: 0;
 }
 
 .figma-score-table span,
@@ -3061,6 +3078,10 @@ a {
 
 .figma-score-table > div:first-child span {
   color: #f5f7fa;
+  text-align: center;
+}
+
+.figma-score-table > div > span:nth-child(2) {
   text-align: center;
 }
 

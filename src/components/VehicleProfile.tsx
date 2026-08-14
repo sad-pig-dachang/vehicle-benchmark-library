@@ -73,6 +73,8 @@ const fixedScoreLogic = [
   ['3.X 硬件及智能化体验', '硬件配置 / 车机系统 / 灯光氛围 / 空调功能'],
 ];
 
+const scoreGroupOf = (dimension: string) => clean(dimension).match(/^(\d+)\./)?.[1] || clean(dimension);
+
 const hasValue = (value: unknown) => {
   if (Array.isArray(value)) return value.length > 0;
   if (value === undefined || value === null) return false;
@@ -1099,8 +1101,15 @@ export function VehicleProfile({
                     <span>{vehicle.model}得分</span>
                     <span>评分依据</span>
                   </div>
-                  {scoreRows.map((row) => (
-                    <div key={row.dimension}>
+                  {scoreRows.map((row, index) => (
+                    <div
+                      className={
+                        index > 0 && scoreGroupOf(row.dimension) !== scoreGroupOf(scoreRows[index - 1].dimension)
+                          ? 'figma-score-table__group-start'
+                          : undefined
+                      }
+                      key={row.dimension}
+                    >
                       <strong>{row.dimension}</strong>
                       <span>{clean(row.maxScore)}</span>
                       <em>{clean(row.score)}</em>
