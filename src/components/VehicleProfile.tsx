@@ -996,14 +996,33 @@ export function VehicleProfile({
               <div className="figma-card-grid">
                 {displayFeatures.map((item: ProfileFeature, index) => {
                   const image = assetUrl(item.image);
-                  const fallbackImage = useYu7DemoFallback ? assetUrl(yu7Fallback.features[index]?.image) : '';
                   return (
                     <article className="figma-feature-card" key={item.id}>
-                      {(image || fallbackImage) && <FigmaImage alt={item.title} src={image} fallbackSrc={fallbackImage} />}
-                      {hasValue(item.title) && <p>{item.title}</p>}
-                      {hasValue(item.feature) && <h3>{item.feature}</h3>}
-                      <KeyValue label="亮点判断" value={item.judgement} />
-                      <KeyValue label="对标价值" value={item.benchmarkValue} />
+                      <div className="figma-feature-card__header">
+                        <h3>亮点{index + 1}: {item.title}</h3>
+                        <p>Feature Highlight</p>
+                      </div>
+                      <div className="figma-feature-card__details">
+                        {hasValue(item.feature) && (
+                          <div>
+                            <strong>具体功能点</strong>
+                            <p>{item.feature}</p>
+                          </div>
+                        )}
+                        {hasValue(item.judgement) && (
+                          <div>
+                            <strong>亮点判断</strong>
+                            <p>{item.judgement}</p>
+                          </div>
+                        )}
+                        {hasValue(item.benchmarkValue) && (
+                          <div>
+                            <strong>对标价值</strong>
+                            <p>{item.benchmarkValue}</p>
+                          </div>
+                        )}
+                      </div>
+                      {image && <FigmaImage alt={item.title} src={image} />}
                     </article>
                   );
                 })}

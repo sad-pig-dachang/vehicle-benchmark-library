@@ -2657,9 +2657,63 @@ a {
   border-radius: 16px;
 }
 
+.figma-feature-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.figma-feature-card__header {
+  margin-bottom: 48px;
+}
+
+.figma-feature-card__header h3 {
+  margin: 0 0 8px;
+  color: #f5f7fa;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 29px;
+}
+
+.figma-feature-card__header p {
+  margin: 0;
+  color: #ff7a2f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+}
+
+.figma-feature-card__details {
+  display: grid;
+  gap: 32px;
+}
+
+.figma-feature-card__details > div {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.figma-feature-card__details strong {
+  color: #ff7a2f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+.figma-feature-card__details p {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: pre-line;
+}
+
 .figma-feature-card img {
+  width: 100%;
   height: 276px;
-  margin: 32px 0 0;
+  margin: 48px 0 0;
   object-fit: cover;
   border-radius: 16px;
 }
