@@ -757,10 +757,8 @@ export const buildL3Scenes = (records, vehicleId) => {
         readVehicleKey(fields, vehicleId) === vehicleId;
       if (!belongsToVehicle) return null;
 
-      const sceneKey = readAny(fields, ['竞品库ID', '场景ID', '场景编号']);
       return {
         record,
-        keys: new Set([record.record_id, sceneKey, title].filter(Boolean)),
         scene: {
           id: record.record_id,
           title,
@@ -772,19 +770,17 @@ export const buildL3Scenes = (records, vehicleId) => {
     })
     .filter(Boolean);
 
-  const sceneByParentToken = new Map();
+  const sceneByParentRecordId = new Map();
   const sceneByRecordId = new Map();
   for (const entry of sceneEntries) {
     sceneByRecordId.set(entry.record.record_id, entry.scene);
-    for (const key of entry.keys) sceneByParentToken.set(key, entry.scene);
+    sceneByParentRecordId.set(entry.record.record_id, entry.scene);
   }
 
-  let activeScene = null;
   for (const record of records) {
     const fields = record.fields || {};
     const nextScene = sceneByRecordId.get(record.record_id);
     if (nextScene) {
-      activeScene = nextScene;
       continue;
     }
 
@@ -792,11 +788,10 @@ export const buildL3Scenes = (records, vehicleId) => {
     if (!need) continue;
 
     const linkedScene = parentTokens(fields)
-      .map((token) => sceneByParentToken.get(token))
+      .map((token) => sceneByParentRecordId.get(token))
       .find(Boolean);
-    const targetScene = linkedScene || (!hasStrictParentField(fields) ? activeScene : null);
-    if (targetScene) {
-      targetScene.needs.push({
+    if (linkedScene) {
+      linkedScene.needs.push({
         need,
         note: readAny(fields, ['行为需求备注', '需求备注']),
         hardware: readAny(fields, ['YU7 已有硬件支撑', 'YU7已有硬件支撑', '已有硬件支撑', '硬件支撑']),
