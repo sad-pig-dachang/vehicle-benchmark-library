@@ -2801,13 +2801,14 @@ a {
 .figma-gallery-hero::after {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 0) 90%, #000 100%);
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0) 16%, rgba(0, 0, 0, 0) 84%, rgba(0, 0, 0, 0.78) 100%);
   content: "";
   pointer-events: none;
 }
 
 .figma-gallery-nav {
-  z-index: 1;
+  z-index: 2;
   width: 40px;
   height: 40px;
   border: 0;
@@ -2856,7 +2857,8 @@ a {
 .figma-gallery-card__image::after {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0) 80%, rgba(0, 0, 0, 0.78) 100%);
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 18%, rgba(0, 0, 0, 0) 82%, rgba(0, 0, 0, 0.72) 100%);
   content: "";
   pointer-events: none;
 }
@@ -2870,7 +2872,7 @@ a {
 .figma-gallery-card__image button {
   position: absolute;
   top: 50%;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   width: 32px;
   height: 32px;
@@ -2898,12 +2900,24 @@ a {
   line-height: 24px;
 }
 
-.figma-gallery-card span {
+.figma-gallery-card > a {
   display: block;
   margin-top: 8px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
+  font-weight: 400;
   line-height: 18px;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.figma-gallery-card > a span {
+  display: inline;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.figma-gallery-card > a:hover {
+  color: #fff;
 }
 
 .figma-section--l5 {

@@ -3,11 +3,6 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { formatPrice } from '../constants/options';
 import heroImage from '../assets/figma-yu7-optimized/hero.jpg';
-import exteriorMainImage from '../assets/figma-yu7-optimized/exterior-main.jpg';
-import exteriorDetailImage from '../assets/figma-yu7-optimized/exterior-detail.jpg';
-import interiorDetailImage from '../assets/figma-yu7-optimized/interior-detail.jpg';
-import hmiDrivingImage from '../assets/figma-yu7-optimized/hmi-driving.jpg';
-import hmiScreenImage from '../assets/figma-yu7-optimized/hmi-screen.jpg';
 import sceneCockpitImage from '../assets/figma-yu7-optimized/scene-cockpit.jpg';
 import sceneDoorImage from '../assets/figma-yu7-optimized/scene-door.jpg';
 import type {
@@ -53,13 +48,13 @@ interface GallerySlide {
   title: string;
   description: string;
   media?: MediaAsset;
+  url?: string;
 }
 
 interface GalleryCard {
   id: string;
   group: string;
   kicker: string;
-  url?: string;
   slides: GallerySlide[];
 }
 
@@ -284,6 +279,13 @@ const mergeScoreRows = (rows: ProfileScoreRow[], fallback: ProfileScoreRow[], en
 const designCardsFromReferences = (references: ProfileDesignReference[]): GalleryCard[] => {
   const cards: GalleryCard[] = [];
 
+  const kickerByGroup: Record<string, string> = {
+    外观亮点: 'EXT Highlights',
+    内饰亮点: 'INT Highlights',
+    CMF亮点: 'CMF Highlights',
+    HMI亮点: 'HMI Highlights',
+  };
+
   references.forEach((item, index) => {
     const group = clean(item.group) || `设计亮点 ${index + 1}`;
     const cardId = `l4-${group}`;
@@ -292,8 +294,7 @@ const designCardsFromReferences = (references: ProfileDesignReference[]): Galler
       card = {
         id: cardId,
         group,
-        kicker: group ? `${group} Highlights` : 'Highlights',
-        url: item.url,
+        kicker: kickerByGroup[group] || 'Highlights',
         slides: [],
       };
       cards.push(card);
@@ -304,6 +305,7 @@ const designCardsFromReferences = (references: ProfileDesignReference[]): Galler
       title: item.title,
       description: item.description,
       media: item.image,
+      url: item.url,
     });
   });
 
@@ -494,89 +496,6 @@ const yu7Fallback = {
       designValue: '可作为家庭生活方式 SUV 的差异化 HMI 表达。',
     },
   ] satisfies ProfileOpportunity[],
-  designHero: [imageAsset('yu7-l4-hero', exteriorMainImage, 'L4 设计对标主视觉')],
-  designCards: [
-    {
-      id: 'yu7-l4-ext',
-      group: '外观亮点',
-      kicker: 'EXT Highlights',
-      url: 'https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-      slides: [
-        {
-          id: 'yu7-l4-ext-1',
-          title: '家族化超大蚌式机盖',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-ext-1', exteriorDetailImage, '家族化超大蚌式机盖'),
-        },
-        {
-          id: 'yu7-l4-ext-2',
-          title: '低趴运动 SUV 姿态',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-ext-2', exteriorMainImage, '低趴运动 SUV 姿态'),
-        },
-      ],
-    },
-    {
-      id: 'yu7-l4-int',
-      group: '内饰亮点',
-      kicker: 'EXT Highlights',
-      url: 'https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-      slides: [
-        {
-          id: 'yu7-l4-int-1',
-          title: '环抱式智能座舱布局',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-int-1', hmiScreenImage, '环抱式智能座舱布局'),
-        },
-        {
-          id: 'yu7-l4-int-2',
-          title: '智能座舱生活场景',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-int-2', sceneDoorImage, '智能座舱生活场景'),
-        },
-      ],
-    },
-    {
-      id: 'yu7-l4-cmf',
-      group: 'CMF亮点',
-      kicker: 'CMF Highlights',
-      url: 'https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-      slides: [
-        {
-          id: 'yu7-l4-cmf-1',
-          title: '丰富的色彩体系',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-cmf-1', interiorDetailImage, '丰富的色彩体系'),
-        },
-        {
-          id: 'yu7-l4-cmf-2',
-          title: '多色车身展示',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-cmf-2', heroImage, '多色车身展示'),
-        },
-      ],
-    },
-    {
-      id: 'yu7-l4-hmi',
-      group: 'HMI亮点',
-      kicker: 'HMI Highlights',
-      url: 'https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-      slides: [
-        {
-          id: 'yu7-l4-hmi-1',
-          title: '小米澎湃 OS',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-hmi-1', hmiDrivingImage, '小米澎湃 OS'),
-        },
-        {
-          id: 'yu7-l4-hmi-2',
-          title: '座舱 HMI 布局',
-          description: '跳转链接：https://www.xiaomiev.com/yu7?c=baidu_brandyu7_pc&g_utm=Thirdparty.Baidu.ProductUnion.BrandZone-Baidu-PC.Brand-A-62',
-          media: imageAsset('yu7-l4-hmi-2', hmiScreenImage, '座舱 HMI 布局'),
-        },
-      ],
-    },
-  ] satisfies GalleryCard[],
   score: '78',
   totalScore: '100',
   scoreRows: [
@@ -709,13 +628,11 @@ const SceneBlock = ({
 };
 
 const DesignCarousel = ({
-  fallbackMedia = [],
   media,
   activeIndex,
   onPrevious,
   onNext,
 }: {
-  fallbackMedia?: MediaAsset[];
   media: MediaAsset[];
   activeIndex: number;
   onPrevious: () => void;
@@ -723,11 +640,10 @@ const DesignCarousel = ({
 }) => {
   if (!media.length) return null;
   const activeMedia = media[activeIndex % media.length];
-  const fallbackActiveMedia = fallbackMedia[activeIndex % Math.max(fallbackMedia.length, 1)] || fallbackMedia[0];
 
   return (
     <div className="figma-gallery-hero">
-      <FigmaImage alt={activeMedia.title} src={activeMedia.url} fallbackSrc={assetUrl(fallbackActiveMedia)} />
+      <FigmaImage alt={activeMedia.title} src={activeMedia.url} />
       {media.length > 1 && (
         <>
           <button aria-label="上一张设计参考图" className="figma-gallery-nav figma-gallery-nav--prev" type="button" onClick={onPrevious}>
@@ -809,17 +725,11 @@ export function VehicleProfile({
   const displayFeatures = features;
   const opportunities = (profile?.l3Styling || []).filter((item) => hasValue(item.title) || hasValue(item.description));
   const displayOpportunities = opportunities;
-  const designReferences = (profile?.l4Design?.references || []).filter((item) => hasValue(item.description) || hasValue(item.image?.url));
-  const profileDesignMedia = [
-    ...(profile?.l4Design?.heroImages || []),
-    ...designReferences.map((item) => item.image).filter(Boolean),
-  ].filter((item): item is MediaAsset => Boolean(item?.url));
-  const designMedia = profileDesignMedia.length ? profileDesignMedia : useYu7DemoFallback ? yu7Fallback.designHero : [];
-  const galleryCards: GalleryCard[] = designReferences.length
-    ? designCardsFromReferences(designReferences)
-    : useYu7DemoFallback
-      ? yu7Fallback.designCards
-      : [];
+  const designReferences = (profile?.l4Design?.references || []).filter(
+    (item) => hasValue(item.title) || hasValue(item.description) || hasValue(item.image?.url) || hasValue(item.url),
+  );
+  const designMedia = (profile?.l4Design?.heroImages || []).filter((item): item is MediaAsset => Boolean(item?.url));
+  const galleryCards: GalleryCard[] = designCardsFromReferences(designReferences);
   const rawScoreRows = (profile?.l5?.rows || []).filter((row: ProfileScoreRow) => hasValue(row.dimension));
   const scoreRows = mergeScoreRows(rawScoreRows, yu7Fallback.scoreRows, useYu7DemoFallback);
   const score = clean(profile?.l5?.score) || (useYu7DemoFallback ? yu7Fallback.score : '');
@@ -1106,32 +1016,24 @@ export function VehicleProfile({
           <SectionHeader kicker="L4 DESIGN REFERENCE" title="L4-设计对标层" intro="沉淀外饰、内饰、CMF 与 HMI 设计语言" />
           <DesignCarousel
             activeIndex={activeDesignIndex}
-            fallbackMedia={useYu7DemoFallback ? yu7Fallback.designHero : []}
             media={designMedia}
             onPrevious={() => setActiveDesignIndex((index) => (index - 1 + designMedia.length) % designMedia.length)}
             onNext={() => setActiveDesignIndex((index) => (index + 1) % designMedia.length)}
           />
           {galleryCards.length > 0 && (
             <div className="figma-gallery-grid">
-              {galleryCards.map((card, cardIndex) => {
+              {galleryCards.map((card) => {
                 const currentIndex = activeCardIndex[card.id] || 0;
                 const slide = card.slides[currentIndex % Math.max(card.slides.length, 1)];
-                const fallbackCard =
-                  useYu7DemoFallback
-                    ? yu7Fallback.designCards.find((item) => item.group === card.group) || yu7Fallback.designCards[cardIndex]
-                    : undefined;
-                const fallbackSlide = fallbackCard?.slides[currentIndex % Math.max(fallbackCard.slides.length, 1)] || fallbackCard?.slides[0];
                 const image = slide?.media;
-                const fallbackImage = fallbackSlide?.media;
-                const title = clean(slide?.title) || clean(fallbackSlide?.title) || card.group;
-                const description = clean(slide?.description) || clean(fallbackSlide?.description);
+                const title = clean(slide?.title) || clean(slide?.description);
                 return (
                   <article className="figma-gallery-card" key={card.id}>
                     <h3>{card.group}</h3>
                     <p>{card.kicker}</p>
-                    {(assetUrl(image) || assetUrl(fallbackImage)) && (
+                    {assetUrl(image) && (
                       <div className="figma-gallery-card__image">
-                        <FigmaImage alt={title} src={assetUrl(image)} fallbackSrc={assetUrl(fallbackImage)} />
+                        <FigmaImage alt={title || card.group} src={assetUrl(image)} />
                         {card.slides.length > 1 && (
                           <>
                             <button aria-label="上一张卡片图片" type="button" onClick={() => changeCardImage(card, -1)}>
@@ -1144,8 +1046,13 @@ export function VehicleProfile({
                         )}
                       </div>
                     )}
-                    <strong>{title}</strong>
-                    {hasValue(description) && <span>{description}</span>}
+                    {hasValue(title) && <strong>{title}</strong>}
+                    {hasValue(slide?.url) && (
+                      <a href={slide.url} rel="noreferrer" target="_blank">
+                        <span>跳转链接：</span>
+                        {slide.url}
+                      </a>
+                    )}
                   </article>
                 );
               })}

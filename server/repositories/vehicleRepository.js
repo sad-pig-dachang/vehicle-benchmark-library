@@ -850,51 +850,59 @@ const buildL3Styling = (records, vehicleId) =>
     };
   });
 
-const buildL4Design = (records, vehicleId) => {
+const normalizeL4Group = (value) => {
+  const group = String(value || '').trim();
+  if (/外观|外饰/.test(group)) return '外观亮点';
+  if (/内饰/.test(group)) return '内饰亮点';
+  if (/CMF/i.test(group)) return 'CMF亮点';
+  if (/HMI/i.test(group)) return 'HMI亮点';
+  return '';
+};
+
+export const buildL4Design = (records, vehicleId) => {
   const heroImages = [];
   const references = [];
-  let activeVehicleId = '';
-  let activeGroup = '';
-  const parentRecordIds = new Set(
-    records
-      .filter((record) => isVehicleParentRow(record.fields || {}, vehicleId))
-      .map((record) => record.record_id),
-  );
+  const vehicleParentRecordIds = new Set();
 
   for (const record of records) {
     const fields = record.fields || {};
-
     if (isVehicleParentRow(fields, vehicleId)) {
-      activeVehicleId = vehicleId;
+      vehicleParentRecordIds.add(record.record_id);
       heroImages.push(...mediaListFromFields(fields, ['核心视觉效果参考', '核心视觉效果参考图', '主图'], vehicleId, 'l4-hero', '核心视觉效果参考'));
-      continue;
     }
+  }
 
-    if (readVehicleKey(fields) && readVehicleKey(fields) !== vehicleId) {
-      activeVehicleId = '';
-      activeGroup = '';
-    }
+  const groupByRecordId = new Map();
+  for (const record of records) {
+    const fields = record.fields || {};
+    if (isVehicleParentRow(fields, vehicleId)) continue;
 
-    const isActive = matchesParent(fields, vehicleId, parentRecordIds) || (!hasStrictParentField(fields) && activeVehicleId === vehicleId);
-    if (!isActive) continue;
+    const firstCell = firstNonEmptyField(fields, ['竞品库ID', '竞品ID', '分组', '分类', '亮点类型']);
+    const group = normalizeL4Group(firstCell);
+    if (!group || !matchesParent(fields, vehicleId, vehicleParentRecordIds)) continue;
+    groupByRecordId.set(record.record_id, group);
+  }
+
+  for (const record of records) {
+    const fields = record.fields || {};
+    const group = parentTokens(fields)
+      .map((token) => groupByRecordId.get(token))
+      .find(Boolean);
+    if (!group) continue;
 
     const description = readAny(fields, ['对应亮点描述', '对照亮点描述', '亮点描述', '设计看点', '描述']);
-    const image = mediaFromFields(fields, ['核心视觉效果参考', '核心视觉效果参考图', '图片', '参考图'], vehicleId, record.record_id, description || activeGroup);
-    const firstCell = firstNonEmptyField(fields, ['竞品库ID', '竞品ID', '分组', '分类', '亮点类型']);
-    if (/外观|外饰|内饰|CMF|HMI|智驾/.test(firstCell) && !description && !image) {
-      activeGroup = firstCell;
-      continue;
-    }
-
-    if (!description && !image) continue;
+    const image = mediaFromFields(fields, ['核心视觉效果参考', '核心视觉效果参考图', '图片', '参考图'], vehicleId, record.record_id, description || group);
+    const linkValue = fieldValueByNames(fields, ['可跳转链接', '链接', 'URL']);
+    const url = extractUrl(linkValue) || readAny(fields, ['可跳转链接', '链接', 'URL']);
+    if (!description && !image && !url) continue;
 
     references.push({
       id: record.record_id,
-      group: readAny(fields, ['分组', '分类', '亮点类型']) || activeGroup || firstCell,
-      title: readAny(fields, ['标题', '对标标题']) || textPreview(description, firstCell || activeGroup),
-      description,
+      group,
+      title: description,
+      description: '',
       image,
-      url: readAny(fields, ['可跳转链接', '链接', 'URL']),
+      url,
     });
   }
 
